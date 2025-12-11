@@ -30,7 +30,6 @@ X = [DR(:,1:7)];
 
 %% Training 
 
-
 numObservations=n;
 
 Y1 = [];

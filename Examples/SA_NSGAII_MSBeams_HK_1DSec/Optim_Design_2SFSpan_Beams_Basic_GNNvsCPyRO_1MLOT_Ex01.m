@@ -1,13 +1,13 @@
-% Optimal_Design_SSFSRecBeams_Complete_Ex01
+% Optim_Design_2SFSpan_Beams_Basic_GNNvsCPyRO_1MLOT_Ex01
 %----------------------------------------------------------------
 % PURPOSE 
-%    To design optimally (with respect to saving in reinforcing volumes)
-%    a beam element for all its three critical cross-sctions (left,middle
-%    right)
+%    To obtain the optimum PF from the NSGA-II assisted by
+%    CPyRO-GraphNet-Beams and plain GNN, along with the PF evolution in
+%    time, to compare performance of both approaches.
 %
 %----------------------------------------------------------------
 %
-% LAST MODIFIED: L.F.Veduzco    2023-07-03
+% LAST MODIFIED: L.F.Veduzco    2025-07-03
 % Copyright (c)  School of Engineering
 %                HKUST
 %----------------------------------------------------------------

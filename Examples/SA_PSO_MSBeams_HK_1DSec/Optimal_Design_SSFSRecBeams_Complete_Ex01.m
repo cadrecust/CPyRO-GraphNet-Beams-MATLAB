@@ -1,13 +1,13 @@
 % Optimal_Design_SSFSRecBeams_Complete_Ex01
 %----------------------------------------------------------------
 % PURPOSE 
-%    To design optimally (with respect to saving in reinforcing volumes)
-%    a beam element for all its three critical cross-sctions (left,middle
-%    right)
+%    To test the performance of the PSO assisted by CPyRO-GraphNet-Beams
+%    and/or plain GNN, for the optimum design of rebar in a single span
+%    beam.
 %
 %----------------------------------------------------------------
-
-% LAST MODIFIED: L.F.Veduzco    2023-07-03
+%
+% LAST MODIFIED: L.F.Veduzco    2025-07-03
 % Copyright (c)  School of Engineering
 %                HKUST
 %----------------------------------------------------------------

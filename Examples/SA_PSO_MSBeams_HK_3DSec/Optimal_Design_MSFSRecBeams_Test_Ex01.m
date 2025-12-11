@@ -1,13 +1,12 @@
-% Optimal_Design_SSFSRecBeams_Complete_Ex01
+% Optimal_Design_MSFSRecBeams_Test_Ex01
 %----------------------------------------------------------------
 % PURPOSE 
-%    To design optimally (with respect to saving in reinforcing volumes)
-%    a beam element for all its three critical cross-sctions (left,middle
-%    right)
+%    To design optimally (with respect to saving in reinforcing weight)
+%    a two-span beam element.
 %
 %----------------------------------------------------------------
 %
-% LAST MODIFIED: L.F.Veduzco    2023-07-03
+% LAST MODIFIED: L.F.Veduzco    2025-07-03
 % Copyright (c)  School of Engineering
 %                HKUST
 %----------------------------------------------------------------

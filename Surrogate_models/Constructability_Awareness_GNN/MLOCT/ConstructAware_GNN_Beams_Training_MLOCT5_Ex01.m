@@ -1,30 +1,28 @@
 
+%% Plain GNN - Node classification - for optimization design of RC beams
+% This example shows how to classify nodes to estimate optimum amounts of
+% number of rebar layers for beams' cross-sections.
+
+% The network is trained specifically for optimum rebar designs with the
+% largest amount of rebar weight (MLOCT5), according to a database where
+% multi-objective optimizaiton was used, and from which 5 different optimum 
+% levels along the Pareto Front were extracted.
 clc
 clear all
 
-%% GNN
-%A=importdata('/Users/lfvm94/Library/CloudStorage/OneDrive-HKUSTConnect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_1LOT_Optimum_Db_HK_3000.xlsx');
-A=importdata('/Users/lfvm94/Library/CloudStorage/OneDrive-HKUSTConnect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_5LOT_HK_Nb_Db_Simple_4000.xlsx');
-%A=importdata('C:\Users\lfver\OneDrive - HKUST Connect\PhD\PhD_Research\MOO_ConstrucBased_Beams_HK\Enhanced_Data_MOO\Data_Class_Beams_HK.xlsx');
-%A=importdata('C\Users\lfvm94\Library\CloudStorage\OneDrive - HKUST Connect\PhD\PhD_Research\MOO_ConstrucBased_Beams_HK\Enhanced_Data_MOO\Enhanced_Data_1LOT_Nb_Db_Simple_4000.xlsx');
+%% Load Data
+% Give the path of the folder where the data is stored. 
+% Adjust it to your own path.
+A=importdata('Enhanced_Data_MOO/Enhanced_Data_5LOT_HK_Nb_Db_Simple_4000.xlsx');
+
 DR=A.data(1:4000,:);
 
-n=length(DR(:,1));
-
-subsize=4000;
-idxSubData=ceil(rand(subsize,1)*n);
-DR=DR(idxSubData,:);
-n=length(DR(:,1));
-
-X = [DR(:,1:7)];
-
 %% Training 
-ptr=1;
-pte=1-ptr;
+
 doTraining = true;
 
-numObservations=ceil(n*ptr);
-Y = [DR(1:numObservations,28:36)];
+numObservations=ceil(n);
+Y = [DR(1:numObservations,46:54)];
 
 Y1 = [];
 for i=1:numObservations
@@ -35,11 +33,10 @@ for i=1:numObservations
         
         Y1=[Y1;[nlay1,nlay2,nlay3]];
     end
-
 end
 
 n=length(Y1(:,1));
-numObservations=ceil(n*ptr);
+numObservations=ceil(n);
 trainDataN=numObservations;
 
 YN1=Y1(:,1); % Node 1: Left
@@ -47,8 +44,8 @@ YN2=Y1(:,2); % Node 2: Middle
 YN3=Y1(:,3); % Node 3: Right
 
 %% GNN architecture
-elements=[2 1 ;
-          1 3 ];
+elements=[2 1;
+          1 3];
 
 %% Adjacency matrix
 numNodesGNN=3;
@@ -69,40 +66,40 @@ features1=[X(:,1),X(:,2),X(:,3),X(:,4),X(:,5)];
 features2=[X(:,1),X(:,2),X(:,3),X(:,4),X(:,6)];
 features3=[X(:,1),X(:,2),X(:,3),X(:,4),X(:,7)];
 
-coulombData1=zeros(numObservations,3,3);
-coulombData2=zeros(numObservations,3,3);
-coulombData3=zeros(numObservations,3,3);
-coulombData4=zeros(numObservations,3,3);
-coulombData5=zeros(numObservations,3,3);
+DataX1=zeros(numObservations,3,3);
+DataX2=zeros(numObservations,3,3);
+DataX3=zeros(numObservations,3,3);
+DataX4=zeros(numObservations,3,3);
+DataX5=zeros(numObservations,3,3);
 for i=1:numObservations
     features=[features1(i,:)',features2(i,:)',features3(i,:)'];
 
     for j=1:numNodesGNN
-        coulombData1(i,j,j)=features(1,j);
-        coulombData2(i,j,j)=features(2,j);
-        coulombData3(i,j,j)=features(3,j);
-        coulombData4(i,j,j)=features(4,j);
-        coulombData5(i,j,j)=features(5,j);
+        DataX1(i,j,j)=features(1,j);
+        DataX2(i,j,j)=features(2,j);
+        DataX3(i,j,j)=features(3,j);
+        DataX4(i,j,j)=features(4,j);
+        DataX5(i,j,j)=features(5,j);
     end
 end
 
-coulombData1 = double(permute(coulombData1, [2 3 1]));
-coulombData2 = double(permute(coulombData2, [2 3 1]));
-coulombData3 = double(permute(coulombData3, [2 3 1]));
-coulombData4 = double(permute(coulombData4, [2 3 1]));
-coulombData5 = double(permute(coulombData5, [2 3 1]));
+DataX1 = double(permute(DataX1, [2 3 1]));
+DataX2 = double(permute(DataX2, [2 3 1]));
+DataX3 = double(permute(DataX3, [2 3 1]));
+DataX4 = double(permute(DataX4, [2 3 1]));
+DataX5 = double(permute(DataX5, [2 3 1]));
 
 nodesNlay3 = [YN1(:,1),YN2(:,1),YN3(:,1)];
 
 nodesNlay1to3=[nodesNlay3];
 
-%% Categories counting
+%% Categories counting (N layers on all cross section)
 [symbol,count] = NRebarLayers(nodesNlay1to3);
 figure(4)
 histogram(categorical(symbol))
 xlabel("Node Label - N layers 1 to 3")
 ylabel("Frequency")
-title(strcat("Label Counts: Optimum Constructability Target 3. N=",num2str(subsize)))
+title(strcat("Label Counts: Optimum Constructability Target 5. N=",num2str(subsize)))
 set(gca, 'Fontname', 'Times New Roman','FontSize',20);
 
 %% Adjacency
@@ -119,25 +116,25 @@ adjacencyDataValidation = adjacency(:,:,idxValidation);
 adjacencyDataTest = adjacency(:,:,idxTest);
 
 % feature data
-coulombDataTrain1 = coulombData1(:,:,idxTrain);
-coulombDataValidation1 = coulombData1(:,:,idxValidation);
-coulombDataTest1 = coulombData1(:,:,idxTest);
+DataXTrain1 = DataX1(:,:,idxTrain);
+DataXValidation1 = DataX1(:,:,idxValidation);
+DataXTest1 = DataX1(:,:,idxTest);
 
-coulombDataTrain2 = coulombData2(:,:,idxTrain);
-coulombDataValidation2 = coulombData2(:,:,idxValidation);
-coulombDataTest2 = coulombData2(:,:,idxTest);
+DataXTrain2 = DataX2(:,:,idxTrain);
+DataXValidation2 = DataX2(:,:,idxValidation);
+DataXTest2 = DataX2(:,:,idxTest);
 
-coulombDataTrain3 = coulombData3(:,:,idxTrain);
-coulombDataValidation3 = coulombData3(:,:,idxValidation);
-coulombDataTest3 = coulombData3(:,:,idxTest);
+DataXTrain3 = DataX3(:,:,idxTrain);
+DataXValidation3 = DataX3(:,:,idxValidation);
+DataXTest3 = DataX3(:,:,idxTest);
 
-coulombDataTrain4 = coulombData4(:,:,idxTrain);
-coulombDataValidation4 = coulombData4(:,:,idxValidation);
-coulombDataTest4 = coulombData4(:,:,idxTest);
+DataXTrain4 = DataX4(:,:,idxTrain);
+DataXValidation4 = DataX4(:,:,idxValidation);
+DataXTest4 = DataX4(:,:,idxTest);
 
-coulombDataTrain5 = coulombData5(:,:,idxTrain);
-coulombDataValidation5 = coulombData5(:,:,idxValidation);
-coulombDataTest5 = coulombData5(:,:,idxTest);
+DataXTrain5 = DataX5(:,:,idxTrain);
+DataXValidation5 = DataX5(:,:,idxValidation);
+DataXTest5 = DataX5(:,:,idxTest);
 
 % target data
 diamDataTrain = nodesNlay1to3(idxTrain,:);
@@ -146,18 +143,18 @@ diamDataTest = nodesNlay1to3(idxTest,:);
 
 % Train partition
 
-[ATrain,XTrain1,labelsTrain] = preprocessData(adjacencyDataTrain,coulombDataTrain1,diamDataTrain);
-[~,XTrain2,~] = preprocessData(adjacencyDataTrain,coulombDataTrain2,diamDataTrain);
-[~,XTrain3,~] = preprocessData(adjacencyDataTrain,coulombDataTrain3,diamDataTrain);
-[~,XTrain4,~] = preprocessData(adjacencyDataTrain,coulombDataTrain4,diamDataTrain);
-[~,XTrain5,~] = preprocessData(adjacencyDataTrain,coulombDataTrain5,diamDataTrain);
+[ATrain,XTrain1,labelsTrain] = preprocessData(adjacencyDataTrain,DataXTrain1,diamDataTrain);
+[~,XTrain2,~] = preprocessData(adjacencyDataTrain,DataXTrain2,diamDataTrain);
+[~,XTrain3,~] = preprocessData(adjacencyDataTrain,DataXTrain3,diamDataTrain);
+[~,XTrain4,~] = preprocessData(adjacencyDataTrain,DataXTrain4,diamDataTrain);
+[~,XTrain5,~] = preprocessData(adjacencyDataTrain,DataXTrain5,diamDataTrain);
 
 % Validation partition
-[AValidation,XValidation1,labelsValidation] = preprocessData(adjacencyDataValidation,coulombDataValidation1,diamDataValidation);
-[~,XValidation2,~] = preprocessData(adjacencyDataValidation,coulombDataValidation2,diamDataValidation);
-[~,XValidation3,~] = preprocessData(adjacencyDataValidation,coulombDataValidation3,diamDataValidation);
-[~,XValidation4,~] = preprocessData(adjacencyDataValidation,coulombDataValidation4,diamDataValidation);
-[~,XValidation5,~] = preprocessData(adjacencyDataValidation,coulombDataValidation5,diamDataValidation);
+[AValidation,XValidation1,labelsValidation] = preprocessData(adjacencyDataValidation,DataXValidation1,diamDataValidation);
+[~,XValidation2,~] = preprocessData(adjacencyDataValidation,DataXValidation2,diamDataValidation);
+[~,XValidation3,~] = preprocessData(adjacencyDataValidation,DataXValidation3,diamDataValidation);
+[~,XValidation4,~] = preprocessData(adjacencyDataValidation,DataXValidation4,diamDataValidation);
+[~,XValidation5,~] = preprocessData(adjacencyDataValidation,DataXValidation5,diamDataValidation);
 
 %% Normalizing training data
 muX1 = mean(XTrain1);
@@ -195,7 +192,6 @@ numHiddenFeatureMaps = 32;
 numHiddenFeatureMaps2 = 16;
 numInputFeatures = size(XTrain,2);
 
-
 %% GAT layers
 % Graph attention operation
 numHeads=struct;
@@ -223,36 +219,31 @@ parameters.attn2.weights.attentionWeights = initializeGlorot([numOut 2],1,2*numO
 
 classes = categories(labelsTrain);
 numClasses = numel(classes);
-%{
-sz = [numHiddenFeatureMaps numClasses];
-numOut = numClasses;
-numIn = numHiddenFeatureMaps;
-%}
+
 sz = [numHiddenFeatureMaps numHiddenFeatureMaps2];
 numOut = numHiddenFeatureMaps2;
 numIn = numHiddenFeatureMaps;
 
 parameters.mult.Weights = initializeGlorot(sz,numOut,numIn,"double");
 
-%% Training
+%% Define training parameters
 numEpochs = 120;
 learnRate = 0.02;
 
 validationFrequency = 10;
-
-trailingAvg = [];
-trailingAvgSq = [];
-XTrain = dlarray(XTrain);
-XValidation = dlarray(XValidation);
-
-if canUseGPU
-    XTrain = gpuArray(XTrain);
-end
-TTrain = onehotencode(labelsTrain,2,ClassNames=classes);
-TValidation = onehotencode(labelsValidation,2,ClassNames=classes);
-
-ToTrain=true;
-if ToTrain
+%% Begin training
+if doTraining
+    trailingAvg = [];
+    trailingAvgSq = [];
+    XTrain = dlarray(XTrain);
+    XValidation = dlarray(XValidation);
+    
+    if canUseGPU
+        XTrain = gpuArray(XTrain);
+    end
+    TTrain = onehotencode(labelsTrain,2,ClassNames=classes);
+    TValidation = onehotencode(labelsValidation,2,ClassNames=classes);
+    
     
     monitor = trainingProgressMonitor( ...
         Metrics=["TrainingLoss","ValidationLoss"], ...
@@ -288,44 +279,47 @@ if ToTrain
         monitor.Progress = 100*(epoch/numEpochs);
     end
 
-    save('nLay_GNN__MOConstrucT3_4000.mat', 'parameters');
-    save('nHead_nLay_GNN_MOConstrucT3_4000.mat', 'numHeads');
+    save('nLay_GNN__MOConstrucT5_4000.mat', 'parameters');
+    save('nHead_nLay_GNN_MOConstrucT5_4000.mat', 'numHeads');
 else
 
-    load('nLay_GNN_MOConstrucT3_4000.mat');
-    load('nHead_nLay_GNN_MOConstrucT3_4000.mat');
+    paramNL=load('nLay_GNN_MOConstrucT5_4000.mat');
+    nheadsparamnNLGNN=load('nHead_nLay_GNN_MOConstrucT5_4000.mat');
 end
 %% Test model
-[ATest,XTest1,labelsTest] = preprocessData(adjacencyDataTest,coulombDataTest1,diamDataTest);
+[ATest,XTest1,labelsTest] = preprocessData(adjacencyDataTest,DataXTest1,diamDataTest);
 XTest1 = (XTest1 - muX1)./sqrt(sigsqX1);
 XTest1 = dlarray(XTest1);
 
-[~,XTest2,~] = preprocessData(adjacencyDataTest,coulombDataTest2,diamDataTest);
+[~,XTest2,~] = preprocessData(adjacencyDataTest,DataXTest2,diamDataTest);
 XTest2 = (XTest2 - muX2)./sqrt(sigsqX2);
 XTest2 = dlarray(XTest2);
 
-[~,XTest3,~] = preprocessData(adjacencyDataTest,coulombDataTest3,diamDataTest);
+[~,XTest3,~] = preprocessData(adjacencyDataTest,DataXTest3,diamDataTest);
 XTest3 = (XTest3 - muX3)./sqrt(sigsqX3);
 XTest3 = dlarray(XTest3);
 
-[~,XTest4,~] = preprocessData(adjacencyDataTest,coulombDataTest4,diamDataTest);
+[~,XTest4,~] = preprocessData(adjacencyDataTest,DataXTest4,diamDataTest);
 XTest4 = (XTest4 - muX4)./sqrt(sigsqX4);
 XTest4 = dlarray(XTest4);
 
-[~,XTest5,~] = preprocessData(adjacencyDataTest,coulombDataTest5,diamDataTest);
+[~,XTest5,~] = preprocessData(adjacencyDataTest,DataXTest5,diamDataTest);
 XTest5 = (XTest5 - muX5)./sqrt(sigsqX5);
 XTest5 = dlarray(XTest5);
 
 XTest=[XTest1,XTest2,XTest3,XTest4,XTest5];
-
-YTest = model2GAT1Conv(parameters,XTest,ATest,numHeads);
+if doTraining
+    YTest = model2GAT1Conv(parameters,XTest,ATest,numHeads);
+else
+    YTest = model2GAT1Conv(paramNL.parameters,XTest,ATest,nheadsparamnNLGNN.numHeads);
+end
 
 YTest = onehotdecode(YTest,classes,2);
 
 nTest=size(idxTest,2);
 for i=1:nTest
     i2=i*3;
-    if double(string(YTest(i2,1)))==3
+    if double(string(YTest(i2,1)))==3 
         YTest(i2,1)=categorical(2);
     end
 end
@@ -339,7 +333,7 @@ figure
 cm = confusionchart(labelsTest,YTest, ...
     ColumnSummary="column-normalized", ...
     RowSummary="row-normalized");
-title(strcat("GCN-NLayer Confusion Chart: Optimum Constructability Target 3. N=",num2str(subsize)))
+title(strcat("GCN-NLayer Confusion Chart: Optimum Constructability Target 5. N=",num2str(subsize)))
 set(gca, 'Fontname', 'Times New Roman','FontSize',20);
 
 %% Function appendix
@@ -420,30 +414,6 @@ function [adjacency,features,labels] = preprocessData(adjacencyData,coulombData,
 
 end
 
-
-function predictions = modelPredictions(parameters,coulombData,adjacencyData,mu,sigsq,classes)
-
-    predictions = {};
-    numObservations = size(coulombData,3);
-    
-    for i = 1:numObservations
-        % Extract unpadded data.
-        numNodes = find(any(adjacencyData(:,:,i)),1,"last");
-        A = adjacencyData(1:numNodes,1:numNodes,i);
-        X = coulombData(1:numNodes,1:numNodes,i);
-    
-        % Preprocess data.
-        [A,X] = preprocessPredictors(A,X);
-        X = (X - mu)./sqrt(sigsq);
-        X = dlarray(X);
-    
-        % Make predictions.
-        Y = model(parameters,X,A);
-        Y = onehotdecode(Y,classes,2);
-        predictions{end+1} = Y;
-    end
-
-end
 
 function [symbol,count] = NRebarLayers(atomicNum)
 % ATOMICSYMBOL Convert atomic number to symbol
@@ -547,26 +517,6 @@ end
 function y = elu(x)
 
     y = max(0, x) + (exp(min(0, x)) -1);
-
-end
-
-function score = fScore(predictions,targets,beta)
-
-    truePositive = sum(predictions .* targets,"all");
-    falsePositive = sum(predictions .* (1-targets),"all");
-    
-    % Precision
-    precision = truePositive/(truePositive + falsePositive);
-    
-    % Recall
-    recall = truePositive/sum(targets,"all");
-    
-    % FScore
-    if nargin == 2
-        beta = 1;
-    end
-    
-    score = (1+beta^2)*precision*recall/(beta^2*precision+recall);
 
 end
 

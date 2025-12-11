@@ -1,13 +1,12 @@
-% Optimal_Design_SSFSRecBeams_Complete_Ex01
+% Optim_Design_1FSSpan_Beams_Simple_GNNvsCPyRO_TestData_1MLOT_Ex01
 %----------------------------------------------------------------
 % PURPOSE 
-%    To design optimally (with respect to saving in reinforcing volumes)
-%    a beam element for all its three critical cross-sctions (left,middle
-%    right)
+%    To test pareto front dominance between NSGAII assisted by 
+%    CPyRO-GraphNet-Beams and plain GNNs.
 %
 %----------------------------------------------------------------
 %
-% LAST MODIFIED: L.F.Veduzco    2023-07-03
+% LAST MODIFIED: L.F.Veduzco    2025-07-03
 % Copyright (c)  School of Engineering
 %                HKUST
 %----------------------------------------------------------------
@@ -15,16 +14,10 @@
 clc
 clear all
 
-%X_scaled1=importdata('C:/Users/lfver/OneDrive - HKUST Connect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
-%A=importdata('/Users/lfvm94/Library/CloudStorage/OneDrive-HKUSTConnect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
-%A=importdata('C:/Users/lfver/OneDrive - HKUST Connect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_1LOT_HK_Nb_Db_4000.xlsx');
-A=importdata('C:/Users/luizv/OneDrive - HKUST Connect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
-B=importdata('C:/Users/luizv/OneDrive - HKUST Connect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_5LOT_HK_Nb_Db_Simple_4000.xlsx');
+A=importdata('Enhanced_Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
+B=importdata('Enhanced_Data_5LOT_HK_Nb_Db_Simple_4000.xlsx');
 DR3=B.data;
 
-%A=importdata('/Users/lfvm94/Library/CloudStorage/OneDrive-HKUSTConnect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
-%B=importdata('/Users/lfvm94/Library/CloudStorage/OneDrive-HKUSTConnect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_5LOT_HK_Nb_Db_Simple_4000.xlsx');
-%DR3=B.data;
 
 DR2=A.data;
 numObservations=size(DR2,1);
