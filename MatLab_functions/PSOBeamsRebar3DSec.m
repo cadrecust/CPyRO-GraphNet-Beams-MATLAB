@@ -3,8 +3,9 @@ function [bestPerformance,bestLenRebar,bestsepRebar,bestPosition,bestdbc9,...
     cBestMid,cBestRight,bestListRebarDiamLeft,bestListRebarDiamMid,...
     bestListRebarDiamRight,bestDistrRebarLeft,bestRebarDistrMid,...
     bestDistrRebarRight,bestnbtLMR,bestnbcut3sec,bestnblowRight,bestdblowRight,...
-    bestCFA]=PSOBeamsRebarLM1DLayerPar(b,h,span,brec,hrec,hagg,pmin,pmax,rebarAvailable,...
-    fcu,load_conditions,fy,wac,cutLoc,dbcc,nbcc,dblow,nblow,Wfac,graphConvPlot,ispan)
+    bestCFA]=PSOBeamsRebar3DSec(b,h,span,Ccx,Ccy,hagg,pmin,pmax,rebarAvailable,...
+    fcu,load_conditions,fy,wac,cutLoc,dbcc,nbcc,dblow,nblow,Wfac,graphConvPlot,ispan,...
+	numberOfParticles,nMaxIter)
 
 %------------------------------------------------------------------------
 % Syntax:
@@ -89,7 +90,6 @@ for i=1:3
 end
 
 % Identifying existing rebar diameters in right section
-
 indexLayerDiam=[];
 for j=1:3
     for i=1:length(rebarAvailable(:,1))
@@ -120,7 +120,7 @@ end
 dbmin=rebarAvailable(1,2);
 
 [sepMindbmin,sepMax1m]=sepMinMaxHK13(dbmin,hagg,0);
-nbmax=fix((b-2*brec-2*dvs-2*sepMindbmin+sepMindbmin)/(dbmin+sepMindbmin));
+nbmax=fix((b-2*Ccx-2*dvs-2*sepMindbmin+sepMindbmin)/(dbmin+sepMindbmin));
 
 if nbcc(1)==0
     nbminl=2;
@@ -148,13 +148,11 @@ beta=0.99;
 maxVelocity=(xmax-xmin)/dt;
 
 %% Generate position and velocity vector of each particle
-numberOfParticles=150;
-numberOfDimensionSpace=12;    
-nMaxIter=30;
-
+    
+numberOfDimensionSpace=12;
 PositionMatrix=zeros(numberOfParticles,numberOfDimensionSpace);
 velocityMatrix=zeros(numberOfParticles,numberOfDimensionSpace);
-parfor i=1:numberOfParticles
+for i=1:numberOfParticles
     for j=1:numberOfDimensionSpace
         r=rand;
         PositionMatrix(i,j)=xmin(j)+fix(r*(xmax(j)-(xmin(j)-1)));
@@ -177,7 +175,7 @@ for j=1:nMaxIter
 
     % Determine the best position and best performance
 
-    parfor i=1:numberOfParticles
+    for i=1:numberOfParticles
         position=PositionMatrix(i,:); % diameter combo
         
         db1l=rebarAvailable(position(1),2);
@@ -214,8 +212,8 @@ for j=1:nMaxIter
         EffRight(i),MrLeft(i),MrMid(i),MrRight(i),cLeft(i),cMid(i),cRight(i),ListRebarDiamLeft{i},...
         ListRebarDiamMid{i},ListRebarDiamRight{i},DistrRebarLeft{i},RebarDistrMid{i},...
         DistrRebarRight{i},dbcRight(i,:),nbcut3sec(:,:,i),nblowLeft{i},dblowLeft{i},nbTopMid{i},...
-        dbTopMid{i},nblowRight{i},dblowRight{i},CFA(i),const(i)]=CutRedistrOptimRecBeam(load_conditions,fcu,...
-        Es,h,b,span,dbc,hagg,brec,hrec,pmin,pmax,sepMin,rebarAvailable,cutLoc,...
+        dbTopMid{i},nblowRight{i},dblowRight{i},CFA(i),const(i)]=CutRedistrOptimRecBeam3DSec(load_conditions,fcu,...
+        Es,h,b,span,dbc,hagg,Ccx,Ccy,pmin,pmax,sepMin,rebarAvailable,cutLoc,...
         Wfac,nblm);
 
         dbc9(i,:)=[dbc,dbcRight(i,:)];

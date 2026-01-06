@@ -81,7 +81,7 @@ brec,hrec,hagg,fcu,fy);
 %% Efficiency analysis
 % Optimization of Right section
 Mur=load_conditions(:,4);
-[Abr,EffRight,MrRight,cRight,nbarsRight,sepRebarRight,ListDiamRight,...
+[Abr,EffRight,MrRight,cRight,nb3r,sepRebarRight,ListDiamRight,...
  RebarDistrRight]=PSOBeamsRebarR1DSec(Mur,fcu,h,b,hagg,brec,hrec,pmin,...
  pmax,sepRebarLeft,redistrRebarM2R,relistRebarM2R,nbAfterCut3L,nb3l,db1l,...
  rebarAvailable);
@@ -105,10 +105,10 @@ dblowRight=db1m;
 nbCombo6=[nbl1,nbl2,nbl3,...
             nbm1,nbm2,nbm3];
 
-if sum(nbarsRight)==0
+if sum(nb3r)==0
     nbCombo9=zeros(1,9);
 else
-    nbCombo9=[nbCombo6,nbarsRight];
+    nbCombo9=[nbCombo6,nb3r];
 end
 
 % Left section
@@ -161,7 +161,7 @@ listRebarDiamMid=[listRebarDiamsMidTen;
 
 nbcut3sec(1,:)=nb3l-nbAfterCut3L;
 nbcut3sec(2,:)=nb3m-nbAfterCut3M;
-nbcut3sec(3,:)=nbarsRight-nbAfterCut3L;
+nbcut3sec(3,:)=nb3r-nbAfterCut3L;
 
 %% Anchorage lengths rebars to cut
 
@@ -171,7 +171,7 @@ ld1R=anchorLenBarTen(fcu,fy,h,hrec,db1l);
 
 %% Total rebar volume in beam
 [volRebar,lenRebarL,lenRebarM,lenRebarR]=volRebarDesignBeamSpan1DSec(nb3l,...
- nb3m,nbarsRight,ab1l,ab1m,abr,ld1L,ld1M,ld1R,nbAfterCut3L,...
+ nb3m,nb3r,ab1l,ab1m,abr,ld1L,ld1M,ld1R,nbAfterCut3L,...
  nbAfterCut3M,cutLoc,span);
 
 lenRebar=[lenRebarL;lenRebarM;lenRebarR];
@@ -179,7 +179,7 @@ lenRebar=[lenRebarL;lenRebarM;lenRebarR];
 %% Constructability
 [FCS1,FCS2,NB,UNB,UND,UC,CS]=CSRebarBeamsRec1DSec(nb3l,nb3m,nb3r,...
     dbl,dbm,dbr,nbcut3l,nbcut3m,nbcut3r,Wunb,Wnd,Wcut,Wnb,Wcs1,Wcs2)
-[UNBS,UNDS,UCS,BSS,CFAS,BS,CS]=CFABeamsRec1DSec(nb3l,nb3m,nbarsRight,db1l,...
+[UNBS,UNDS,UCS,BSS,CFAS,BS,CS]=CFABeamsRec1DSec(nb3l,nb3m,nb3r,db1l,...
 db1m,db1l,nbcut3sec(1,:),nbcut3sec(2,:),nbcut3sec(3,:),Wunb,Wnd,Wcut);
 
 %% Rebar distribution restriction

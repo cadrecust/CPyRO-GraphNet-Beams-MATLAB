@@ -1,5 +1,5 @@
 function [minArea,bestEff,bestMr,bestc,xBest,bestListDiam,bestRebarDistr,...
-    isfeasible]=DistrEffConstrR1DLayer(Mu,fcu,Es,h,b,hagg,brec,hrec,pmin,...
+    isfeasible]=PlainDistrEffConstrR3DSec(Mu,fcu,Es,h,b,hagg,brec,hrec,pmin,...
     pmax,sepMin,sepRebaright,nbAfterCut3,distrRebarComp,listRebarDiamComp,...
     nb3l,dbc,nbr)
 
@@ -31,13 +31,18 @@ nbCombo3=[nb1,nb2,nb3];
 areaRebar=ab1*nb1+ab2*nb2+ab3*nb3;
 
 %% Distribution of rebars
-if sum(nb3l-nbAfterCut3)==0 % if there were cuts for the left section
-    [distrRebarTen,listRebarDiamTen]=distrRebarRecBeam1DiamLayer(nbCombo3,...
+if sum(nb3l-nbAfterCut3)==0 % if there were no cuts for the left section
+    [distrRebarTen,listRebarDiamTen]=distrRebarRecBeam3DSec(nbCombo3,...
         dbc,b,h,brec,hrec,vSepMin);
 else
     nb3l2=[nbCombo3(1),nbCombo3(1),nbCombo3(1)];
-    [distrRebarTen,listRebarDiamTen]=distrRebarRecBeamCuts1DiamLayer...
-        (nb3l2,dbc,b,h,brec,hrec,vSepMin,nbCombo3);
+    if nbCombo3(1)<nb3l(1)
+        [distrRebarTen,listRebarDiamTen]=distrRebarRecBeamCuts3DSec...
+            (nb3l,dbc,b,h,brec,hrec,vSepMin,nbCombo3);
+    else
+        [distrRebarTen,listRebarDiamTen]=distrRebarRecBeamCuts3DSec...
+            (nb3l2,dbc,b,h,brec,hrec,vSepMin,nbCombo3);
+    end
 end
 
 if Mu<0
@@ -52,7 +57,7 @@ listRebarDiam=[listRebarDiamTen;
 [Eff,Mr,c]=EfRecBeamBars(Mu,fcu,Es,fy,h,b,distrRebar,...
                              listRebarDiam,hrec);
 
-[ccr]=rebarDistrConstr3LayerRecBeam1DiamLayer(bp,nbCombo3);
+[ccr]=rebarDistrConstr3LayerRecBeam3DSec(bp,nbCombo3);
 
 if all([Eff<1.0,areaRebar>=amin,areaRebar<=amax,sepRebaright(1)>=sepMin(1),...
         sepRebaright(2)>=sepMin(2),sepRebaright(3)>=sepMin(3),ccr==1])

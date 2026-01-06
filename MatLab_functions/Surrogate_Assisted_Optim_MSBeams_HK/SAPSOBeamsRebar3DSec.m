@@ -136,7 +136,6 @@ maxVelocity=(xmax-xmin)/dt;
 
 numberOfDimensionSpace=6;    
 
-
 PositionMatrix=zeros(numberOfParticles,numberOfDimensionSpace);
 velocityMatrix=zeros(numberOfParticles,numberOfDimensionSpace);
 for i=1:numberOfParticles

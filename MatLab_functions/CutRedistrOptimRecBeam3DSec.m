@@ -3,7 +3,7 @@ function [minimumFitness,bestLenRebar,bestsepRebar,bestNbCombo9,bestEffLeft,best
     bestListRebarDiamLeft,bestListRebarDiamMid,bestListRebarDiamRight,...
     bestDistrRebarLeft,bestRebarDistrMid,bestDistrRebarRight,bestdbcRight,...
     bestnbcut3sec,bestnblowLeft,bestdblowLeft,bestnbTopMid,bestdbTopMid,...
-    bestnblowRight,bestdblowRight,bestCFA,const]=CutRedistrOptimRecBeam...
+    bestnblowRight,bestdblowRight,bestCFA,const]=CutRedistrOptimRecBeam3DSec...
     (load_conditions,fcu,Es,h,b,span,dbc,hagg,brec,hrec,pmin,pmax,sepMin,...
     availableRebar,cutLoc,Wfac,nblm)
             
@@ -88,14 +88,14 @@ dbm3=[db1m,db2m,db3m];
 %% Cuts and redistribution Left-Mid span
 [nbAfterCut3L,nbAfterCut3M,nbAfterCut3R,redistrRebarL2M,relistRebarDiamL2M,...
 redistrRebarM2L,relistRebarM2L,redistrRebarM2R,relistRebarM2R]=...
-cutRedistRebarSpanRecBeam1DiamLayer(load_conditions,nb3l,nb3m,dbl3,dbm3,b,h,...
+cutRedistRebarSpanRecBeam3DSec(load_conditions,nb3l,nb3m,dbl3,dbm3,b,h,...
 brec,hrec,hagg,fcu,fy);
 
 %% Efficiency analysis
 % Optimization of Right section
 Mur=load_conditions(:,4);
-[Abr,EffRight,MrRight,cRight,nbarsRight,sepRebarRight,ListDiamRight,...
- RebarDistrRight,dbcRight]=PSOBeamsRebarR1Diam3Layer(Mur,fcu,h,b,...
+[Abr,EffRight,MrRight,cRight,nb3r,sepRebarRight,ListDiamRight,...
+ RebarDistrRight,dbcRight]=PSOBeamsRebarR3DSec(Mur,fcu,h,b,...
  hagg,brec,hrec,pmin,pmax,sepRebarLeft,redistrRebarM2R,relistRebarM2R,...
  nbAfterCut3L,nb3l,dbl3,availableRebar);
 
@@ -121,10 +121,10 @@ dblowRight=dbm3;
 nbCombo6=[nbl1,nbl2,nbl3,...
             nbm1,nbm2,nbm3];
 
-if sum(nbarsRight)==0
+if sum(nb3r)==0
     nbCombo9=zeros(1,9);
 else
-    nbCombo9=[nbCombo6,nbarsRight];
+    nbCombo9=[nbCombo6,nb3r];
 end
 
 % Left section
@@ -135,7 +135,7 @@ if Mul<0
     distrRebarLeftComp=[-redistrRebarM2L];
     listRebarDiamLeftComp=[relistRebarM2L];
 
-    [distrRebarLeftTen,listRebarDiamsLeftTen]=distrRebarRecBeam1DiamLayer...
+    [distrRebarLeftTen,listRebarDiamsLeftTen]=distrRebarRecBeam3DSec...
         (nb3l,dbc(1:3),b,h,brec,hrec,vsepminl);
 
     distrRebarLeft=[distrRebarLeftTen;
@@ -144,7 +144,7 @@ if Mul<0
                       listRebarDiamLeftComp];
 else
 
-    [distrRebarLeftComp,listRebarDiamLeftComp]=distrRebarRecBeam1DiamLayer...
+    [distrRebarLeftComp,listRebarDiamLeftComp]=distrRebarRecBeam3DSec...
         (nb3l,dbc(1:3),b,h,brec,hrec,vsepminl);
 
     distrRebarLeft=[-distrRebarLeftComp;
@@ -162,7 +162,7 @@ Mum=load_conditions(:,3);
 distrRebarMidComp=[-redistrRebarL2M];
 listRebarDiamMidComp=[relistRebarDiamL2M];
 
-[distrRebarMidTen,listRebarDiamsMidTen]=distrRebarRecBeam1DiamLayer...
+[distrRebarMidTen,listRebarDiamsMidTen]=distrRebarRecBeam3DSec...
     (nb3m,dbc(4:6),b,h,brec,hrec,vminSepm);
 
 distrRebarMid=[distrRebarMidTen;
@@ -177,7 +177,7 @@ listRebarDiamMid=[listRebarDiamsMidTen;
 
 nbcut3sec(1,:)=nb3l-nbAfterCut3L;
 nbcut3sec(2,:)=nb3m-nbAfterCut3M;
-nbcut3sec(3,:)=nbarsRight-nbAfterCut3L;
+nbcut3sec(3,:)=nb3r-nbAfterCut3L;
 
 %% Anchorage lengths rebars to cut
 
@@ -200,28 +200,41 @@ ld3r=anchorLenBarTen(fcu,fy,h,hrec,dbcRight(3));
 ld3R=[ld1r,ld2r,ld3r];
 
 %% Total rebar volume in beam
-[volRebar,lenRebarL,lenRebarM,lenRebarR]=volRebarDesignBeamSpan1DiamLayer(nb3l,...
- nb3m,nbarsRight,abl3,abm3,abr3,ldL3,ld3M,ld3R,nbAfterCut3L,...
+[volRebar,lenRebarL,lenRebarM,lenRebarR]=volRebarDesignBeamSpan3DSec(nb3l,...
+ nb3m,nb3r,abl3,abm3,abr3,ldL3,ld3M,ld3R,nbAfterCut3L,...
  nbAfterCut3M,cutLoc,span);
 
 lenRebar=[lenRebarL;lenRebarM;lenRebarR];
 
 %% Constructability
 
-[UNBS,UNDS,UCS,BSS,CFAS,BS,CFA]=CFABeamsRec1DiamLayer(nb3l,...
-nb3m,nbarsRight,dbl3,dbm3,dbcRight,nbcut3sec(1,:),nbcut3sec(2,:),nbcut3sec(3,:),...
-Wunb,Wnd,Wcut);
+Wunb=Wfac(1:2);
+Wnd=Wfac(3);
+Wnb=Wfac(4);
+Wc=Wfac(5:6);
+
+Wassem=Wfac(7);
+Wcutbend=Wfac(8);
+
+dbmin=10;
+[sepMinDbmin,~]=sepMinMaxHK13(dbmin,hagg,0);
+nbMaxLayer=fix((b-2*brec-2*dvs+sepMinDbmin)/(dbmin+sepMinDbmin));
+
+[FCS1,FCS2,NB,UNB,UND,UC,CS]=CSRebarBeamsRec3DSec(nbMaxLayer,nb3l,...
+nb3m,nb3r,dbl3,dbm3,dbcRight,nbcut3sec(1,:),nbcut3sec(2,:),nbcut3sec(3,:),...
+Wunb,Wnd,Wcut,Wnb,Wcs1,Wcs2);
 
 %% Rebar distribution restriction
 % Left section
-[ccl]=rebarDistrConstr3LayerRecBeam1DiamLayer(bpl,nb3l);
+[ccl]=rebarDistrConstr3LayerRecBeam3DSec(bpl,nb3l);
 
 % Mid section
-[ccm]=rebarDistrConstr3LayerRecBeam1DiamLayer(bpm,nb3m);
+[ccm]=rebarDistrConstr3LayerRecBeam3DSec(bpm,nb3m);
+
+% Right section
+[ccr]=rebarDistrConstr3LayerRecBeam3DSec(bpm,nb3r);
 
 %% Evaluate restrictions
-
-
 sepRebar(1,:)=sepRebarLeft;
 sepRebar(2,:)=sepRebarMid;
 sepRebar(3,:)=sepRebarRight;
@@ -229,7 +242,7 @@ sepRebar(3,:)=sepRebarRight;
 
 if all([EffMid<1.0,EffLeft<1.0,EffRight<1.0,Abr>=amin,Abr<=amax,Abm>=amin,...
    Abm<=amax,Abl<=amax,Abl>=amin,sepMin(1)<=min(sepRebarLeft),...
-   sepMin(4)<=min(sepRebarMid),sepMin(7)<=min(sepRebarRight),ccl==1,ccm==1])
+   sepMin(4)<=min(sepRebarMid),sepMin(7)<=min(sepRebarRight),ccl==1,ccm==1,ccr==1])
     
     minimumFitness=volRebar;
     bestLenRebar=lenRebar;
@@ -269,9 +282,56 @@ if all([EffMid<1.0,EffLeft<1.0,EffRight<1.0,Abr>=amin,Abr<=amax,Abm>=amin,...
     bestcMid=cMid;
     bestcRight=cRight;
 
-    bestCFA=CFA;
-    const=1;
+    bestCFA=CS;
+    const=0;
 else
+    constr=0;
+    if EffMid>1.0
+        constr=constr+1;
+    end
+    if EffLeft>1.0
+        constr=constr+1;
+    end
+    if EffRight>1.0
+        constr=constr+1;
+    end
+    if Abr<amin
+        constr=constr+1;
+    end
+    if Abr>amax
+        constr=constr+1;
+    end
+    if Abm<amin
+        constr=constr+1;
+    end
+    if Abm>amax
+        constr=constr+1;
+    end
+    if Abl>amax
+        constr=constr+1;
+    end
+    if Abl<amin
+        constr=constr+1;
+    end
+    if sepMin(1)>min(sepRebarLeft)
+        constr=constr+1;
+    end
+    if sepMin(4)>min(sepRebarMid)
+        constr=constr+1;
+    end
+    if sepMin(7)>min(sepRebarRight)
+        constr=constr+1;
+    end
+    if ccl==0
+        constr=constr+1;
+    end
+    if ccm==0
+        constr=constr+1;
+    end
+    if ccr==0
+        constr=constr+1;
+    end
+
     minimumFitness=1e10;
     bestLenRebar=0;
     
@@ -313,5 +373,4 @@ else
     bestnbcut3sec=nbcut3sec;
     
     bestCFA=0;
-    const=0;
 end

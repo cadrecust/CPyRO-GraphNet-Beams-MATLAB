@@ -3,7 +3,7 @@ function [bestPerformance,bestLenRebar,bestsepRebar,bestPosition,bestdbc3,...
     cBestMid,cBestRight,bestListRebarDiamLeft,bestListRebarDiamMid,...
     bestListRebarDiamRight,bestDistrRebarLeft,bestRebarDistrMid,...
     bestDistrRebarRight,bestnbtLMR,bestnbcut3sec,bestnblowRight,bestdblowRight,...
-    bestCS]=PSOBeamsRebarBasic(b,h,span,brec,hrec,hagg,pmin,pmax,rebarAvailable,...
+    bestCS]=PSOBeamsRebar1DSec(b,h,span,brec,hrec,hagg,pmin,pmax,rebarAvailable,...
     fcu,load_conditions,fy,wac,cutLoc,dbcc,nbcc,dblow,nblow,Wfac,graphConvPlot,ispan)
 
 %------------------------------------------------------------------------
@@ -138,7 +138,7 @@ PositionMatrix=zeros(numberOfParticles,numberOfDimensionSpace);
 velocityMatrix=zeros(numberOfParticles,numberOfDimensionSpace);
 absolouteValueVelocity=zeros(numberOfParticles,numberOfDimensionSpace);
 valueVelocity=zeros(numberOfParticles,numberOfDimensionSpace);
-parfor i=1:numberOfParticles
+for i=1:numberOfParticles
     for j=1:numberOfDimensionSpace
         r=rand;
         PositionMatrix(i,j)=xmin(j)+fix(r*(xmax(j)-(xmin(j)-1)));
@@ -161,7 +161,7 @@ for j=1:nMaxIter
 
     % Determine the best position and best performance
 
-    parfor i=1:numberOfParticles
+    for i=1:numberOfParticles
         position=PositionMatrix(i,:); % diameter combo
         
         db1l=rebarAvailable(position(1),2);

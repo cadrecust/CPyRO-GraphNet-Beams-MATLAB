@@ -1,4 +1,4 @@
-function [nbnew1,nbnew2,nbnew3,Abcut]=cutRebarSecBeamMr1DiamLayer(nb3,db3,...
+function [nbnew1,nbnew2,nbnew3,Abcut]=cutRebarSecBeamMr3DSec(nb3,db3,...
                         Mt,b,h,hrec,vSep,fcu,fy)
     %------------------------------------------------------------------------
     % Syntax:
@@ -25,7 +25,8 @@ function [nbnew1,nbnew2,nbnew3,Abcut]=cutRebarSecBeamMr1DiamLayer(nb3,db3,...
     %                School of Engineering
     %                The Hong Kong University of Science and Technology (HKUST)
     %------------------------------------------------------------------------
-               
+
+
     Amin=0.003*b*h;
     
     ab3=pi/4*db3.^2;
@@ -45,6 +46,7 @@ function [nbnew1,nbnew2,nbnew3,Abcut]=cutRebarSecBeamMr1DiamLayer(nb3,db3,...
         k=0.156;
     end
     z=d*(0.5+sqrt(0.25-k/0.9));
+
     Abm=Mt/(0.87*fy*z); % minimum required area for corresponding moment
     Abm=max([Abm,Amin]);
     

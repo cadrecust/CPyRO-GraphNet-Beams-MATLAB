@@ -48,8 +48,8 @@ function [bestPerformance,bestEffR,bestMrR,bestcRight,bestnb,bestsepRebar,...
 %
 %------------------------------------------------------------------------
 % LAST MODIFIED: L.F.Veduzco    2023-07-03
-% Copyright (c)  Faculty of Engineering
-%                Autonomous University of Queretaro, Mexico
+% Copyright (c)  School of Engineering
+%                HKUST
 %------------------------------------------------------------------------
 
 Es=200e3;

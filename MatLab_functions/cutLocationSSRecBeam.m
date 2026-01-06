@@ -37,7 +37,7 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
     %                School of Engineering
     %                The Hong Kong University of Science and Technology (HKUST)
     %------------------------------------------------------------------------
-            
+    
     ne=length(M(1,:));
     Mleft=M(1,1);
     Mright=M(1,ne);
@@ -48,7 +48,7 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
         cutxLoc=[];
         for n=1:ne
             Mref=Mleft;
-            if abs(M(2,n))<=abs(0.5*Mref)
+            if abs(M(1,n))<=abs(0.5*Mref)
                 n1=n;
                 cutxLoc=[cutxLoc,dL*n];
                 break;
@@ -57,7 +57,7 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
     
         Mref=Mmid;
         for n=mp:-1:1
-            if abs(M(2,n))<=abs(0.5*Mref)
+            if abs(M(1,n))<=abs(0.5*Mref)
                 cutxLoc=[cutxLoc,dL*n];
                 break;
             end
@@ -65,15 +65,15 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
     
         Mref=Mmid;
         for n=mp:1:ne
-            if abs(M(2,n))<=abs(0.5*Mref)
+            if abs(M(1,n))<=abs(0.5*Mref)
                 cutxLoc=[cutxLoc,dL*n];
                 break;
             end
         end
-    
+        
         Mref=Mright;
         for n=ne:-1:1
-            if abs(M(2,n))<=abs(0.5*Mref)
+            if abs(M(1,n))<=abs(0.5*Mref)
                 cutxLoc=[cutxLoc,dL*n];
                 break;
             end
@@ -83,7 +83,7 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
             cutxLoc=[];
             for n=1:ne
                 Mref=Mleft;
-                if abs(M(2,n))<=abs(0.5*Mref)
+                if abs(M(1,n))<=abs(0.5*Mref)
                     n1=n;
                     cutxLoc=[cutxLoc,dL*n];
                     break;
@@ -92,14 +92,14 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
     
             Mref=Mmid;
             for n=mp:-1:1
-                if abs(M(2,n))<=abs(0.5*Mref)
+                if abs(M(1,n))<=abs(0.5*Mref)
                     cutxLoc=[cutxLoc,dL*n];
                     break;
                 end
             end
             Mref=Mmid;
             for n=mp:1:ne
-                if abs(M(2,n))<=abs(0.5*Mref)
+                if abs(M(1,n))<=abs(0.5*Mref)
                     cutxLoc=[cutxLoc,dL*n];
                     break;
                 end
@@ -110,7 +110,7 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
             cutxLoc=[];
             for n=1:ne
                 Mref=Mleft;
-                if abs(M(2,n))<=abs(0.5*Mref)
+                if abs(M(1,n))<=abs(0.5*Mref)
                     n1=n;
                     cutxLoc=[cutxLoc,dL*n];
                     break;
@@ -119,7 +119,7 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
     
             Mref=Mmid;
             for n=mp:-1:1
-                if abs(M(2,n))<=abs(0.5*Mref)
+                if abs(M(1,n))<=abs(0.5*Mref)
                     cutxLoc=[cutxLoc,dL*n];
                     break;
                 end
@@ -133,7 +133,7 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
             cutxLoc=[cutxLoc,0];
             Mref=Mmid;
             for n=mp:-1:1
-                if abs(M(2,n))<=abs(0.5*Mref)
+                if abs(M(1,n))<=abs(0.5*Mref)
                     cutxLoc=[cutxLoc,dL*n];
                     break;
                 end
@@ -141,7 +141,7 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
             
             Mref=Mmid;
             for n=mp:1:ne
-                if abs(M(2,n))<=abs(0.5*Mref)
+                if abs(M(1,n))<=abs(0.5*Mref)
                     cutxLoc=[cutxLoc,dL*n];
                     break;
                 end
@@ -150,7 +150,7 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
             
             Mref=Mright;
             for n=ne:-1:1
-                if abs(M(2,n))<=abs(0.5*Mref)
+                if abs(M(1,n))<=abs(0.5*Mref)
                     cutxLoc=[cutxLoc,dL*n];
                     break;
                 end
@@ -163,7 +163,7 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
             
             Mref=Mmid;
             for n=mp:1:ne
-                if abs(M(2,n))<=abs(0.5*Mref)
+                if abs(M(1,n))<=abs(0.5*Mref)
                     cutxLoc=[cutxLoc,dL*n];
                     break;
                 end
@@ -172,7 +172,7 @@ function cutxLoc=cutLocationSSRecBeam(M,dL)
             
             Mref=Mright;
             for n=ne:-1:1
-                if abs(M(2,n))<=abs(0.5*Mref)
+                if abs(M(1,n))<=abs(0.5*Mref)
                     cutxLoc=[cutxLoc,dL*n];
                     break;
                 end
