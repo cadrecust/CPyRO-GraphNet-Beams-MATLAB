@@ -114,59 +114,46 @@ ndl=length(Nv);
 
 N=Nv(1);
 
-[idxTrain,idxValidation,idxTest] = trainingPartitions(N,[0 0 1]);
-nTrain=length(idxTrain);
-nValidation=length(idxValidation);
-nTest=length(idxTest);
+cutxLocBeamTest=cutxLocBeam(:,:);
 
-cutxLocBeamTrain=cutxLocBeam(idxTrain,:);
-cutxLocBeamValidation=cutxLocBeam(idxValidation,:);
-cutxLocBeamTest=cutxLocBeam(idxTest,:);
+[XTest,ATest]=dataGNN(DR);
 
-% Data for GCNN
-meanX=[349.605734767025	633.225806451613	37.4534050179212	4505.55555555556	-26339479.7363044];
-sigsqX=[4949.66534345653	11216.8343161059	31.3195134954590	996295.300677007	2.10064997682719e+15];
-
-[XTrain,XValidation,XTest,ATrain,AValidation,ATest]=dataTrainNLClass...
-    (DR,idxTrain,idxValidation,idxTest,meanX,sigsqX);
-
-XTestOpt = DR(idxTest,1:7);
+XTestOpt = DR(:,1:7);
 
 %% Load surrogate models
 
 % Model for prediction of As per cross-section
+% MLOCT 1
+nheadsparamnGATPIGNN=load("nHeads_GAT_PIGNN_As_Section_MOConstrucT1_4000.mat");
+paramPIGCNN=load("PIGCNN_As_Section_MOConstrucT1_4000.mat");
 
-nheadsparamnGATPIGNN=load("nHeads_GAT_PIGNN_As_Section_4000.mat");
-paramPIGCNN=load("PIGCNN_As_Section_4000.mat");
+Ao3CPyRO1=PIGNNmodel1fc1GAT1Conv1fc(paramPIGCNN.pignn,XTest,ATest,nheadsparamnGATPIGNN.numHeads);
+Ao3CPyRO1=extractdata(Ao3CPyRO1);
 
-Ao3CPyRO=PIGNNmodel1fc1GAT1Conv1fc(paramPIGCNN.pignn,XTest,ATest,nheadsparamnGATPIGNN.numHeads);
-Ao3CPyRO=extractdata(Ao3CPyRO);
+nheadsparamnGATGNN=load("nHeads_GAT_GCNN_As_Section_MLOCT1_4000.mat");
+paramGCNN=load("GCNN_As_Section_MLOCT1_4000.mat");
 
-nheadsparamnGATGNN=load("nHeads_GAT_GCNN_As_Section_4000.mat");
-paramGCNN=load("GCNN_As_Section_4000.mat");
+Ao3GNN1=PlainGNNmodel1fc1GAT1Conv1fc(paramGCNN.parameters,XTest,ATest,nheadsparamnGATGNN.numHeads);
+Ao3GNN1=extractdata(Ao3GNN1);
 
-Ao3GNN=PlainGNNmodel1fc1GAT1Conv1fc(paramGCNN.parameters,XTest,ATest,nheadsparamnGATGNN.numHeads);
-Ao3GNN=extractdata(Ao3GNN);
+% MLOCT 2
+nheadsparamnGATPIGNN=load("nHeads_GAT_PIGNN_As_Section_MOConstrucT5_4000.mat");
+paramPIGCNN=load("PIGCNN_As_Section_MOConstrucT5_4000.mat");
 
-muY1=1000.5;
-muY2=766.6692;
-muY3=851.6936;
+Ao3CPyRO2=PIGNNmodel1fc1GAT1Conv1fc(paramPIGCNN.pignn,XTest,ATest,nheadsparamnGATPIGNN.numHeads);
+Ao3CPyRO2=extractdata(Ao3CPyRO2);
 
-sigsqY1=2.0948e5;
-sigsqY2=8.0557e4;
-sigsqY3=1.5316e5;
+nheadsparamnGATGNN=load("nHeads_GAT_GCNN_As_Section_MLOCT5_4000.mat");
+paramGCNN=load("GCNN_As_Section_MLOCT5_4000.mat");
 
-% Denormalizing targets and outputs
-ntest=length(idxTest);
-for i=1:ntest
-    i1=(i-1)*3+1;
-    i2=i*3;
-    
-    Ao3GNN(i1,1)=Ao3GNN(i1,1)*sqrt(sigsqY1) + muY1;
-    Ao3GNN(i1+1,1)=Ao3GNN(i1+1,1)*sqrt(sigsqY2) + muY2;
-    Ao3GNN(i2,1)=Ao3GNN(i2,1)*sqrt(sigsqY3) + muY3;
-    
-end
+Ao3GNN2=PlainGNNmodel1fc1GAT1Conv1fc(paramGCNN.parameters,XTest,ATest,nheadsparamnGATGNN.numHeads);
+Ao3GNN2=extractdata(Ao3GNN2);
+
+% Gather all estimations for each model
+
+Ao3CPyRO=[Ao3CPyRO1,Ao3CPyRO2];
+Ao3GNN=[Ao3GNN1,Ao3GNN2];
+
 fcu=XTestOpt(:,3);
 span=XTestOpt(:,4);
 
@@ -338,8 +325,26 @@ set(gca, 'Fontname', 'Times New Roman','FontSize',22);
 
 end
 
-function [XTrain,XValidation,XTest,ATrain,AValidation,ATest]=dataTrainNLClass...
-    (DR,idxTrain,idxValidation,idxTest,meanX,sigsqX)
+function [XTest,ATest]=dataGNN(DR)
+
+meanX=[349.605734767025	
+        633.225806451613	
+        37.4534050179212	
+        4505.55555555556	
+        -26339479.7363044];
+
+sigsqX=[4949.66534345653	
+          11216.8343161059	
+          31.3195134954590	
+          996295.300677007	
+          2.10064997682719e+15];
+
+
+[XTest,ATest]=predSurrogate(DR,meanX,sigsqX);
+
+end
+
+function [XTest,ATest]=predSurrogate(DR,meanX,sigsqX)
 
     sigsqX1=sigsqX(1);
     sigsqX2=sigsqX(2);
@@ -355,7 +360,7 @@ function [XTrain,XValidation,XTest,ATrain,AValidation,ATest]=dataTrainNLClass...
 
     numObservations=length(DR(:,1));
 
-    elements=[2 1;
+    elements=[2 1 ;
               1 3];
 
     % Adjacency matrix
@@ -379,91 +384,38 @@ function [XTrain,XValidation,XTest,ATrain,AValidation,ATest]=dataTrainNLClass...
     features2=[X(:,1),X(:,2),X(:,3),X(:,4),X(:,6)];
     features3=[X(:,1),X(:,2),X(:,3),X(:,4),X(:,7)];
 
-    coulombData1=zeros(numObservations,3,3);
-    coulombData2=zeros(numObservations,3,3);
-    coulombData3=zeros(numObservations,3,3);
-    coulombData4=zeros(numObservations,3,3);
-    coulombData5=zeros(numObservations,3,3);
+    XData1=zeros(numObservations,3,3);
+    XData2=zeros(numObservations,3,3);
+    XData3=zeros(numObservations,3,3);
+    XData4=zeros(numObservations,3,3);
+    XData5=zeros(numObservations,3,3);
     for i=1:numObservations
         features=[features1(i,:)',features2(i,:)',features3(i,:)'];
 
         for j=1:numNodesGNN
-            coulombData1(i,j,j)=features(1,j);
-            coulombData2(i,j,j)=features(2,j);
-            coulombData3(i,j,j)=features(3,j);
-            coulombData4(i,j,j)=features(4,j);
-            coulombData5(i,j,j)=features(5,j);
+            XData1(i,j,j)=features(1,j);
+            XData2(i,j,j)=features(2,j);
+            XData3(i,j,j)=features(3,j);
+            XData4(i,j,j)=features(4,j);
+            XData5(i,j,j)=features(5,j);
         end
     end
-
-    coulombData1 = double(permute(coulombData1, [2 3 1]));
-    coulombData2 = double(permute(coulombData2, [2 3 1]));
-    coulombData3 = double(permute(coulombData3, [2 3 1]));
-    coulombData4 = double(permute(coulombData4, [2 3 1]));
-    coulombData5 = double(permute(coulombData5, [2 3 1]));
+    XData1 = double(permute(XData1, [2 3 1]));
+    XData2 = double(permute(XData2, [2 3 1]));
+    XData3 = double(permute(XData3, [2 3 1]));
+    XData4 = double(permute(XData4, [2 3 1]));
+    XData5 = double(permute(XData5, [2 3 1]));
 
     %% Partition of data
-
     % node adjacency data
-    adjacencyDataTrain = adjacency(:,:,idxTrain);
-    adjacencyDataValidation = adjacency(:,:,idxValidation);
-    adjacencyDataTest = adjacency(:,:,idxTest);
+    adjacencyDataTest = adjacency;
 
     % feature data
-    coulombDataTrain1 = coulombData1(:,:,idxTrain);
-    coulombDataValidation1 = coulombData1(:,:,idxValidation);
-    coulombDataTest1 = coulombData1(:,:,idxTest);
-
-    coulombDataTrain2 = coulombData2(:,:,idxTrain);
-    coulombDataValidation2 = coulombData2(:,:,idxValidation);
-    coulombDataTest2 = coulombData2(:,:,idxTest);
-
-    coulombDataTrain3 = coulombData3(:,:,idxTrain);
-    coulombDataValidation3 = coulombData3(:,:,idxValidation);
-    coulombDataTest3 = coulombData3(:,:,idxTest);
-
-    coulombDataTrain4 = coulombData4(:,:,idxTrain);
-    coulombDataValidation4 = coulombData4(:,:,idxValidation);
-    coulombDataTest4 = coulombData4(:,:,idxTest);
-
-    coulombDataTrain5 = coulombData5(:,:,idxTrain);
-    coulombDataValidation5 = coulombData5(:,:,idxValidation);
-    coulombDataTest5 = coulombData5(:,:,idxTest);
-
-
-    % Train partition
-
-    [ATrain,XTrain1] = preprocessData(adjacencyDataTrain,coulombDataTrain1);
-    [~,XTrain2] = preprocessData(adjacencyDataTrain,coulombDataTrain2);
-    [~,XTrain3] = preprocessData(adjacencyDataTrain,coulombDataTrain3);
-    [~,XTrain4] = preprocessData(adjacencyDataTrain,coulombDataTrain4);
-    [~,XTrain5] = preprocessData(adjacencyDataTrain,coulombDataTrain5);
-
-    % Validation partition
-    [AValidation,XValidation1] = preprocessData(adjacencyDataValidation,coulombDataValidation1);
-    [~,XValidation2] = preprocessData(adjacencyDataValidation,coulombDataValidation2);
-    [~,XValidation3] = preprocessData(adjacencyDataValidation,coulombDataValidation3);
-    [~,XValidation4] = preprocessData(adjacencyDataValidation,coulombDataValidation4);
-    [~,XValidation5] = preprocessData(adjacencyDataValidation,coulombDataValidation5);
-
-    %% Normalizing training data
-
-    XTrain1 = (XTrain1 - muX1)./sqrt(sigsqX1);
-    XTrain2 = (XTrain2 - muX2)./sqrt(sigsqX2);
-    XTrain3 = (XTrain3 - muX3)./sqrt(sigsqX3);
-    XTrain4 = (XTrain4 - muX4)./sqrt(sigsqX4);
-    XTrain5 = (XTrain5 - muX5)./sqrt(sigsqX5);
-
-    XTrain=[XTrain1,XTrain2,XTrain3,XTrain4,XTrain5];
-
-    %% Normalizing validation data
-    XValidation1 = (XValidation1 - muX1)./sqrt(sigsqX1);
-    XValidation2 = (XValidation2 - muX2)./sqrt(sigsqX2);
-    XValidation3 = (XValidation3 - muX3)./sqrt(sigsqX3);
-    XValidation4 = (XValidation4 - muX4)./sqrt(sigsqX4);
-    XValidation5 = (XValidation5 - muX5)./sqrt(sigsqX5);
-
-    XValidation=[XValidation1,XValidation2,XValidation3,XValidation4,XValidation5];
+    coulombDataTest1 = XData1;
+    coulombDataTest2 = XData2;
+    coulombDataTest3 = XData3;
+    coulombDataTest4 = XData4;
+    coulombDataTest5 = XData5;
 
     %% Normalizing test data
     [ATest,XTest1] = preprocessData(adjacencyDataTest,coulombDataTest1);
@@ -656,200 +608,3 @@ function [adjacency,features] = preprocessPredictors(adjacencyData,coulombData)
     end
 
 end
-
-function [B]=MLR2(D,inter)
-    
-    n=length(D(:,1));
-    p=length(D(1,:));
-    if inter==1
-        X=[ones(n,1),D(:,1:p-1)];
-    elseif inter==0
-        X=[D(:,1:p-1)];
-    end
-    Y=D(:,p);
-    
-    B=inv(X'*X)*X'*Y;
-end
-
-
-function [r,u,esbarsShear,esbarsMoment]=MSFSFEMBeams(L,Az,Iz,Ee,...
-        supportsLoc,w,dL,wrange,plMVdiag)
-
-%% Geometry
-np=fix(L/dL)+1;
-nnodes=np;
-nbars=np-1;
-nspans=length(supportsLoc)-1;
-A=zeros(nbars,1);
-I=zeros(nbars,1);
-E=zeros(nbars,1);
-neSum=0;
-for i=1:nspans
-    nbarsi=fix((supportsLoc(i+1)-supportsLoc(i))/dL);
-    i1=neSum+1;
-    neSum=neSum+nbarsi;
-    A(i1:neSum)=Az(i);
-    I(i1:neSum)=Iz(i);
-    E(i1:neSum)=Ee(i);
-end
-
-% Mesh
-coordxy(1:np,1)=0:dL:L;
-coordxy(1:np,2)=0;
-
-% Node connectivity
-ni(1:nbars,1)=1:1:(np-1);
-nf(1:nbars,1)=2:1:nnodes;
-
-%% Boundary conditions
-nsupports=length(supportsLoc);
-for i=1:nsupports
-    nodeSupports(i)=fix(supportsLoc(i)/dL)+1;
-end
-
-%% Topology
-% Fixed supports at left end
-
-ndofSupports(1)=nodeSupports(1)*3-2;
-ndofSupports(2)=nodeSupports(1)*3-1;
-ndofSupports(3)=nodeSupports(1)*3;
-    
-% Simply supported in between ends
-for i=2:length(nodeSupports)-1
-    ndofSupports(i*3-2)=nodeSupports(i)*3-2;
-    ndofSupports(i*3-1)=nodeSupports(i)*3-1;
-end
-
-% Fixed supports at right end
-ndofSupports(nsupports*3-2)=nodeSupports(nsupports)*3-2;
-ndofSupports(nsupports*3-1)=nodeSupports(nsupports)*3-1;
-ndofSupports(nsupports*3)=nodeSupports(nsupports)*3;
-
-ndofs=length(ndofSupports);
-ndofSupports2=[];
-for i=1:ndofs
-    if  ndofSupports(i)>0
-        ndofSupports2=[ndofSupports2,ndofSupports(i)];
-    end
-end
-ndofSupports=ndofSupports2;
-
-bc(:,1)=ndofSupports';
-bc(:,2)=0;
-
-Edof=zeros(nbars,7);
-for i=1:nbars
-    Edof(i,1)=i;
-    Edof(i,2)=ni(i)*3-2;
-    Edof(i,3)=ni(i)*3-1;
-    Edof(i,4)=ni(i)*3;
-    
-    Edof(i,5)=nf(i)*3-2;
-    Edof(i,6)=nf(i)*3-1;
-    Edof(i,7)=nf(i)*3;
-end
-
-%% Loads
-qbarray(1:nbars,1)=1:1:nbars;
-
-NDistLoads=length(wrange(:,1));
-for i=1:NDistLoads
-    ew1=fix(wrange(i,1)/dL)+1;
-    ew2=ceil(wrange(i,2)/dL);
-    
-    W1=w(i,1);
-    W2=w(i,2);
-    dW=(W2-W1)/(np-1);
-    k=1;
-    for j=ew1:ew2
-        qbarray(j,2)=w(i,1)+(k-1)*dW;
-        k=k+1;
-    end
-end
-
-Kglobal=zeros(3*nnodes);
-fglobal=zeros(3*nnodes,1);
-
-%% Matrix assembly and solver
-ep_bars=zeros(nbars,3); 
-eq_bars=zeros(nbars,2);
-for i=1:nbars 
-    ex=[coordxy(ni(i),1) coordxy(nf(i),1)];
-    ey=[coordxy(ni(i),2) coordxy(nf(i),2)];
-    ep=[E(i) A(i) I(i)];
-    eq=[0 -qbarray(i,2)];
-
-    ep_bars(i,:)=ep;
-    eq_bars(i,:)=eq;
-    [Ke_barra,fe_barra]=beam2e(ex,ey,ep,eq);
-
-    [Kglobal,fglobal]=assem(Edof(i,:),Kglobal,Ke_barra,fglobal,fe_barra);
-
-end
-[u,r]=solveq(Kglobal,fglobal,bc); % solving system of equations
-
-Ed=extract(Edof,u);
-ex=coordxy(:,1);
-ey=coordxy(:,2);
-
-Ex=zeros(nbars,2);
-Ey=zeros(nbars,2);
-
-for j=1:nbars
-    Ex(j,1)=ex(Edof(j,4)/3);
-    Ex(j,2)=ex(Edof(j,7)/3);
-
-    Ey(j,1)=ey(Edof(j,4)/3);
-    Ey(j,2)=ey(Edof(j,7)/3);
-
-end
-
-%% Forces diagrams
-nfep=2;
-esbarsNormal=zeros(nfep,nbars);
-esbarsShear=zeros(nfep,nbars);
-esbarsMoment=zeros(nfep,nbars);
-for i=1:nbars
-    es_bar=beam2s(Ex(i,:),Ey(i,:),ep_bars(i,:),Ed(i,:),eq_bars(i,:),nfep);
-    esbarsNormal(:,i)=es_bar(:,1);
-    esbarsShear(:,i)=es_bar(:,2);
-    esbarsMoment(:,i)=es_bar(:,3);
-end
-
-if plMVdiag==1
-    
-    %----Undeformed mesh-----%
-    figure(6)
-    xlabel('X [m]')
-    ylabel('Y [m]')
-    title('Deformed structure');
-    plotpar=[2 1 0];
-    eldraw2(Ex,Ey,plotpar);
-    hold on
-    
-    %-----Deformed mesh-----%
-    figure(6)
-    plotpar=[1 2 1];
-    eldisp2(Ex,Ey,Ed,plotpar,100);  
-    hold on
-    
-    sfac=scalfact2(Ex(1,:),Ey(1,:),esbarsShear(:,1),1);
-    for i=1:nbars
-        figure(4)
-        plotpar=[2 1];
-        eldia2(Ex(i,:),Ey(i,:),esbarsShear(:,i),plotpar,sfac*10);
-        title('Shear Force')
-    end
-    
-    sfac=scalfact2(Ex(1,:),Ey(1,:),esbarsMoment(:,1),1);
-    for i=1:nbars
-         figure(5)
-         plotpar=[4 1];
-         eldia2(Ex(i,:),Ey(i,:),esbarsMoment(:,i),plotpar,sfac*10);
-         title('Bending Moment')
-         xlabel('X [m]')
-         ylabel('Y [KN-m]')
-    end
-end
-end
-%------------------------------- end -----------------------------------

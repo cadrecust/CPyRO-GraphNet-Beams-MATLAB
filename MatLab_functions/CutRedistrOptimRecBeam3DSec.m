@@ -3,14 +3,10 @@ function [minimumFitness,bestLenRebar,bestsepRebar,bestNbCombo9,bestEffLeft,best
     bestListRebarDiamLeft,bestListRebarDiamMid,bestListRebarDiamRight,...
     bestDistrRebarLeft,bestRebarDistrMid,bestDistrRebarRight,bestdbcRight,...
     bestnbcut3sec,bestnblowLeft,bestdblowLeft,bestnbTopMid,bestdbTopMid,...
-    bestnblowRight,bestdblowRight,bestCFA,const]=CutRedistrOptimRecBeam3DSec...
+    bestnblowRight,bestdblowRight,bestCFA,constr]=CutRedistrOptimRecBeam3DSec...
     (load_conditions,fcu,Es,h,b,span,dbc,hagg,brec,hrec,pmin,pmax,sepMin,...
     availableRebar,cutLoc,Wfac,nblm)
             
-Wunb=Wfac(1:3);
-Wnd=Wfac(4:5);
-Wcut=Wfac(6:8);
-
 fy=Es*0.00217;
 
 amin=pmin*b*h;
@@ -48,7 +44,7 @@ nbm1=nblm(4); nbm2=nblm(5); nbm3=nblm(6);
 nb3l=nblm(1:3);
 nb3m=nblm(4:6);
 
-Abl=ab1l*nbl3+ab2l*nbl2+ab3l*nbl3;
+Abl=ab1l*nbl1+ab2l*nbl2+ab3l*nbl3;
 Abm=ab1m*nbm1+nbm2*ab2m+nbm3*ab3m;
 
 %% Rebar separation
@@ -95,9 +91,9 @@ brec,hrec,hagg,fcu,fy);
 % Optimization of Right section
 Mur=load_conditions(:,4);
 [Abr,EffRight,MrRight,cRight,nb3r,sepRebarRight,ListDiamRight,...
- RebarDistrRight,dbcRight]=PSOBeamsRebarR3DSec(Mur,fcu,h,b,...
- hagg,brec,hrec,pmin,pmax,sepRebarLeft,redistrRebarM2R,relistRebarM2R,...
- nbAfterCut3L,nb3l,dbl3,availableRebar);
+RebarDistrRight,dbcRight]=PSOBeamsRebarR3DSec(Mur,fcu,h,b,...
+hagg,brec,hrec,pmin,pmax,sepRebarLeft,redistrRebarM2R,relistRebarM2R,...
+nbAfterCut3L,nb3l,dbl3,availableRebar);
 
 [sepMin1r,~]=sepMinMaxHK13([dbcRight(1)],hagg,0);
 [sepMin2r,~]=sepMinMaxHK13([dbcRight(2)],hagg,0);
@@ -211,7 +207,7 @@ lenRebar=[lenRebarL;lenRebarM;lenRebarR];
 Wunb=Wfac(1:2);
 Wnd=Wfac(3);
 Wnb=Wfac(4);
-Wc=Wfac(5:6);
+Wcut=Wfac(5:6);
 
 Wassem=Wfac(7);
 Wcutbend=Wfac(8);
@@ -222,29 +218,29 @@ nbMaxLayer=fix((b-2*brec-2*dvs+sepMinDbmin)/(dbmin+sepMinDbmin));
 
 [FCS1,FCS2,NB,UNB,UND,UC,CS]=CSRebarBeamsRec3DSec(nbMaxLayer,nb3l,...
 nb3m,nb3r,dbl3,dbm3,dbcRight,nbcut3sec(1,:),nbcut3sec(2,:),nbcut3sec(3,:),...
-Wunb,Wnd,Wcut,Wnb,Wcs1,Wcs2);
+Wunb,Wnd,Wcut,Wnb,Wassem,Wcutbend);
 
 %% Rebar distribution restriction
 % Left section
-[ccl]=rebarDistrConstr3LayerRecBeam3DSec(bpl,nb3l);
+[ccl]=rebarDistrConstr3LayerRecBeam(bpl,nb3l);
 
 % Mid section
-[ccm]=rebarDistrConstr3LayerRecBeam3DSec(bpm,nb3m);
+[ccm]=rebarDistrConstr3LayerRecBeam(bpm,nb3m);
 
 % Right section
-[ccr]=rebarDistrConstr3LayerRecBeam3DSec(bpm,nb3r);
+[ccr]=rebarDistrConstr3LayerRecBeam(bpm,nb3r);
 
 %% Evaluate restrictions
 sepRebar(1,:)=sepRebarLeft;
 sepRebar(2,:)=sepRebarMid;
 sepRebar(3,:)=sepRebarRight;
 
-
 if all([EffMid<1.0,EffLeft<1.0,EffRight<1.0,Abr>=amin,Abr<=amax,Abm>=amin,...
    Abm<=amax,Abl<=amax,Abl>=amin,sepMin(1)<=min(sepRebarLeft),...
    sepMin(4)<=min(sepRebarMid),sepMin(7)<=min(sepRebarRight),ccl==1,ccm==1,ccr==1])
     
     minimumFitness=volRebar;
+    
     bestLenRebar=lenRebar;
 
     bestnblowLeft=nblowLeft;
@@ -283,7 +279,7 @@ if all([EffMid<1.0,EffLeft<1.0,EffRight<1.0,Abr>=amin,Abr<=amax,Abm>=amin,...
     bestcRight=cRight;
 
     bestCFA=CS;
-    const=0;
+    constr=0;
 else
     constr=0;
     if EffMid>1.0

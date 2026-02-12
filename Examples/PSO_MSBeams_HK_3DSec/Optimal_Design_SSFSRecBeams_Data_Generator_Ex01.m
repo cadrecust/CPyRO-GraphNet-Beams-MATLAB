@@ -15,16 +15,14 @@
 clc
 clear all
 
-%X_scaled1=importdata('C:/Users/lfver/OneDrive - HKUST Connect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
-A=importdata('/Users/lfvm94/Library/CloudStorage/OneDrive-HKUSTConnect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
-%A=importdata('C:/Users/lfver/OneDrive - HKUST Connect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_1LOT_HK_Nb_Db_4000.xlsx');
-%A=importdata('C:/Users/lfver/OneDrive - HKUST Connect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
+A=importdata('');
 
 DR=A.data;
+nsamples=size(DR,1);
 
 %% Geometry 
-n1=3192;
-n2=4000;
+n1=1;
+n2=nsamples;
 arrayDataCollection=[];
 for i=n1:n2
     fcu=DR(i,3);

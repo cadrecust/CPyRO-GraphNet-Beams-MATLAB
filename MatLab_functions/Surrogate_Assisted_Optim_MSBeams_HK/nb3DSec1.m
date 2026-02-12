@@ -1,4 +1,4 @@
-function [nb1,nb2,nb3,isfeasible]=nbSimple3DSec1(nbmax,Aos,ab,nbcc)
+function [nb1,nb2,nb3,isfeasible]=nb3DSec1(nbmax,Aos,ab,nbcc)
     
     Abmax1 = nbmax(1) * ab(1) ;
     Abmax2 = nbmax(2) * ab(2) ;

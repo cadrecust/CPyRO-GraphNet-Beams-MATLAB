@@ -1,4 +1,4 @@
-function ExportDesignSSRecBeam(directionData,DimBeamsCollec,db18Spans,...
+function ExportDesignSSRecBeam(directionData,DimBeamsCollec,db9Spans,...
     LenRebarL,LenRebarM,LenRebarR,DistrRebarLeft,DistrRebarMid,DistrRebarRight,...
     totnbSpan,tenbLMRspan,ListRebarDiamLeft,ListRebarDiamMid,ListRebarDiamRight,...
     diamListdSdb,distrSb,beamNSb,ShearBeamDesignCollec)
@@ -47,92 +47,59 @@ function ExportDesignSSRecBeam(directionData,DimBeamsCollec,db18Spans,...
 %                HKUST
 %------------------------------------------------------------------------
 
-% Opening files
-nombre_archivo='nBarBeamsCollec.csv';
-fileid_01=fopen([directionData,nombre_archivo],'w+t');
+nameFile1='nBarBeamsCollec.csv';
+fileid01 = [directionData, nameFile1];
+writematrix(tenbLMRspan, fileid01);
 
-nombre_archivo='dimBeamsCollec.csv';
-fileid_02=fopen([directionData,nombre_archivo],'w+t');
+nameFile2='dimBeamsCollec.csv';
+fileid02 = [directionData, nameFile2];
+writematrix(DimBeamsCollec, fileid02);
 
-nombre_archivo='DiamBarBeamsCollec3sec.csv';
-fileid_03=fopen([directionData,nombre_archivo],'w+t');
+nameFile3='TendbSec.csv';
+fileid03 = [directionData, nameFile3];
+writematrix(db9Spans, fileid03);
 
-nombre_archivo='DistrBarBeams3sec.csv';
-fileid_04=fopen([directionData,nombre_archivo],'w+t');
+DistrRebarLMRBeam=[DistrRebarLeft;
+                   DistrRebarMid;
+                   DistrRebarRight];
 
-nombre_archivo='LenBarBeams3sec.csv';
-fileid_05=fopen([directionData,nombre_archivo],'w+t');
+nameFile5='DistrBarBeams3sec.csv';
+fileid05 = [directionData, nameFile5];
+writematrix(DistrRebarLMRBeam, fileid05);
 
-nombre_archivo='NbarsTot3sec.csv';
-fileid_06=fopen([directionData,nombre_archivo],'w+t');
+LenRebarLMRBeam=[LenRebarL;
+                   LenRebarM;
+                   LenRebarR];
 
-nombre_archivo='DiamListSb.csv';
-fileid_07=fopen([directionData,nombre_archivo],'w+t');
+nameFile12='LenRebarLMRBeams.csv';
+fileid12 = [directionData, nameFile12];
+writematrix(LenRebarLMRBeam, fileid12);
 
-nombre_archivo='DistrSb.csv';
-fileid_08=fopen([directionData,nombre_archivo],'w+t');
+nameFile11='NbarsTot3sec.csv';
+fileid11 = [directionData, nameFile11];
+writematrix(totnbSpan, fileid11);
 
-nombre_archivo='NSb.csv';
-fileid_09=fopen([directionData,nombre_archivo],'w+t');
+ListDiamLMRBeam=[ListRebarDiamLeft;
+                 ListRebarDiamMid;
+                 ListRebarDiamRight];
 
-% To write .txt files for the exportation of results 
-nbeams=length(DimBeamsCollec(:,1));
+nameFile6='ListDiamLMRBeams.csv';
+fileid06 = [directionData, nameFile6];
+writematrix(ListDiamLMRBeam, fileid06);
 
-for i=1:nbeams
-    fprintf(fileid_01,'%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n',tenbLMRspan(i,:));
-    fprintf(fileid_02,'%.2f,%.2f,%.2f,%.2f,%.2f\n',DimBeamsCollec(i,:));
-end
+nameFile7='DistrSb.csv';
+fileid07 = [directionData, nameFile7];
+writematrix(distrSb, fileid07);
 
-ListDiamLMR=[ListRebarDiamLeft;ListRebarDiamMid;ListRebarDiamRight];
-DistrRebarLMR=[DistrRebarLeft;DistrRebarMid;DistrRebarRight];
+nameFile8='beamNSb.csv';
+fileid08 = [directionData, nameFile8];
+writematrix(beamNSb, fileid08);
 
-for j=1:length(ListDiamLMR(:,1))
-    fprintf(fileid_04,'%.2f,%.2f\n',DistrRebarLMR(j,:));
-end
-fprintf(fileid_03,'%d\n',ListDiamLMR(:,:));
-fprintf(fileid_07,'%d\n',diamListdSdb(:,:));
-
-for i=1:length(diamListdSdb)
-    fprintf(fileid_08,'%.2f,%.2f\n',distrSb(i,:));
-end
-
-LenRebar=[LenRebarL;LenRebarM;LenRebarR];
-for j=1:length(LenRebar(:,1))
-    fprintf(fileid_05,'%.2f\n',LenRebar(j,:));
-end
-
-for i=1:nbeams
-    fprintf(fileid_06,'%d,%d,%d\n',totnbSpan(i,:));
-    
-end
-fprintf(fileid_09,'%d\n',beamNSb(:,:));
-
-fclose(fileid_01);
-fclose(fileid_02);
-fclose(fileid_03);
-fclose(fileid_04);
-fclose(fileid_05);
-fclose(fileid_06);
-fclose(fileid_07);
-fclose(fileid_08);
-fclose(fileid_09);
-
-nombre_archivo='TendbSec.csv';
-fileid_10=fopen([directionData,nombre_archivo],'w+t');
-
-for i=1:nbeams
-    fprintf(fileid_10,'%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n',...
-        db18Spans(i,:));
-end
-fclose(fileid_10);
-
+nameFile9='DiamListSb.csv';
+fileid09 = [directionData, nameFile9];
+writematrix(diamListdSdb, fileid09);
 
 % Exporting shear design data (if required)
-
-nombre_archivo='ShearBeamDesign.csv';
-fileid_11=fopen([directionData,nombre_archivo],'w+t');
-for i=1:nbeams
-    fprintf(fileid_11,'%.1f,%.1f,%.1f,%.2f,%.2f,%.2f\n',...
-        ShearBeamDesignCollec(i,:));
-end
-fclose(fileid_11);
+nameFile10='ShearBeamDesign.csv';
+fileid10 = [directionData, nameFile10];
+writematrix(ShearBeamDesignCollec, fileid10);

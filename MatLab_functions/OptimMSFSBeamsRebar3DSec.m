@@ -2,7 +2,8 @@ function [volRebarSpans,LenRebarL,LenRebarM,LenRebarR,sepRebarSpans,db9Spans,...
   EffSpans,MrSpans,cSpans,ListRebarDiamLeft,ListRebarDiamMid,ListRebarDiamRight,...
   DistrRebarLeft,DistrRebarMid,DistrRebarRight,nbLMRspan,totalnbSpan,CFAspans]=...
   OptimMSFSBeamsRebar3DSec(b,h,span,brec,hrec,hagg,pmin,pmax,rebarAvailable,fcu,...
-  load_conditions,fy,wac,cutxLoc,Wfac,pltOptConv,pltOptReb,span2Plt,nparticles,niter)
+  load_conditions,fy,wac,cutxLoc,Wfac,pltOptConv,pltOptReb,span2Plt,nparticles,...
+   niter)
 
 nspans=length(load_conditions(:,1));
 
@@ -30,8 +31,8 @@ for i=1:nspans
     bestEffMid,bestEffRight,bestMrLeft,bestMrMid,bestMrRight,cbestLeft,cBestMid,...
     cBestRight,bestListRebarDiamLeft,bestListRebarDiamMid,bestListRebarDiamRight,...
     bestDistrRebarLeft,bestRebarDistrMid,bestDistrRebarRight,bestnbtLMR,...
-    bestnbcut3sec,nblowRight,dblowRight,CFA]=PSOBeamsRebar3DSec...
-    (b(i),h(i),span(i),brec,hrec,hagg,pmin,pmax,rebarAvailable,fcu(i),load_conditions(i,:),...
+    bestnbcut3sec,nblowRight,dblowRight,CFA]=PSOBeamsRebar3DSec(b(i),h(i),...
+    span(i),brec,hrec,hagg,pmin,pmax,rebarAvailable,fcu(i),load_conditions(i,:),...
     fy,wac,cutxLoc(i,:),bestdbc(1,7:9),bestnbtLMR(1,7:9),dblowRight,...
     nblowRight,Wfac,pltOptConv,i,nparticles,niter);
     
@@ -46,15 +47,15 @@ for i=1:nspans
 
     MrSpans(i,:)=[bestMrLeft,bestMrMid,bestMrRight];
     cSpans(i,:)=[cbestLeft,cBestMid,cBestRight];
-
+	
     nbleft=length(bestListRebarDiamLeft);
     ListRebarDiamLeft=[ListRebarDiamLeft;
                       bestListRebarDiamLeft];
-
+					  
     nbMid=length(bestListRebarDiamMid);
     ListRebarDiamMid=[ListRebarDiamMid;
                       bestListRebarDiamMid];
-
+					  
     nbright=length(bestListRebarDiamRight);
     ListRebarDiamRight=[ListRebarDiamRight;
                         bestListRebarDiamRight];
@@ -82,7 +83,7 @@ for i=1:nspans
 
     CFAspans(i,1)=CFA;
     if sum(bestdbc)==0
-        disp(strcat('No solution was found for that span No.',num2str(i)))
+        disp(strcat('No solution was found for span No.',num2str(i)))
         return;
     end
 end
@@ -130,7 +131,7 @@ if pltOptReb==1
         ListRebarDiamRightSec=ListRebarDiamRight(nbR+1:nbR+nbright,1);
 
         %% Plot
-        plotBeamBar3sec(b,h,DistrRebarLeftSec,ListRebarDiamLeftSec,...
+        plotBeamBar3sec(b(spanPlt),h(spanPlt),DistrRebarLeftSec,ListRebarDiamLeftSec,...
                 DistrRebarMidSec,ListRebarDiamMidSec,DistrRebarRightSec,...
                 ListRebarDiamRightSec,spanPlt);
     end

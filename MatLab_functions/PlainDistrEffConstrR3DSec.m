@@ -57,7 +57,7 @@ listRebarDiam=[listRebarDiamTen;
 [Eff,Mr,c]=EfRecBeamBars(Mu,fcu,Es,fy,h,b,distrRebar,...
                              listRebarDiam,hrec);
 
-[ccr]=rebarDistrConstr3LayerRecBeam3DSec(bp,nbCombo3);
+[ccr]=rebarDistrConstr3LayerRecBeam(bp,nbCombo3);
 
 if all([Eff<1.0,areaRebar>=amin,areaRebar<=amax,sepRebaright(1)>=sepMin(1),...
         sepRebaright(2)>=sepMin(2),sepRebaright(3)>=sepMin(3),ccr==1])

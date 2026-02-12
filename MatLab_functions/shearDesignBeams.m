@@ -115,13 +115,14 @@ end
 
 %% Left part
 v1=abs(shearbeam(1,1))/(b*d);
-
 if 0.5*vc<v1 && v1<=(vc+vr) 
     s1=2*ab*0.87*fy/(vr*b);
 elseif (vc+vr)<v1 && v1<min([0.8*sqrt(fcu),7])
     s1=2*ab*0.87*fy/((v1-vc)*b);
 elseif vmax<=0.5*vc
     s1=2*ab*0.87*fy/(vr*b);
+elseif 0.5*vc>=v1
+    s1=maxsv; % mm
 end
 
 s1=s1-mod(s1,5);

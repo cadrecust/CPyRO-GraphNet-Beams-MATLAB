@@ -130,7 +130,7 @@ if Mul<0
     distrRebarLeftComp=[-redistrRebarM2L];
     listRebarDiamLeftComp=[relistRebarM2L];
 
-    [distrRebarLeftTen,listRebarDiamsLeftTen]=distrRebarRecBeam1DiamLayer...
+    [distrRebarLeftTen,listRebarDiamsLeftTen]=distrRebarRecBeam3DSec...
         (nb3l,dbc(1:3),b,h,brec,hrec,vsepminl);
 
     distrRebarLeft=[distrRebarLeftTen;
@@ -139,7 +139,7 @@ if Mul<0
                       listRebarDiamLeftComp];
 else
 
-    [distrRebarLeftComp,listRebarDiamLeftComp]=distrRebarRecBeam1DiamLayer...
+    [distrRebarLeftComp,listRebarDiamLeftComp]=distrRebarRecBeam3DSec...
         (nb3l,dbc(1:3),b,h,brec,hrec,vsepminl);
 
     distrRebarLeft=[-distrRebarLeftComp;
@@ -157,7 +157,7 @@ Mum=load_conditions(:,3);
 distrRebarMidComp=[-redistrRebarL2M];
 listRebarDiamMidComp=[relistRebarDiamL2M];
 
-[distrRebarMidTen,listRebarDiamsMidTen]=distrRebarRecBeam1DiamLayer...
+[distrRebarMidTen,listRebarDiamsMidTen]=distrRebarRecBeam3DSec...
     (nb3m,dbc(4:6),b,h,brec,hrec,vminSepm);
 
 distrRebarMid=[distrRebarMidTen;
@@ -195,7 +195,7 @@ ld3r=anchorLenBarTen(fcu,fy,h,hrec,dbl3(3));
 ld3R=[ld1r,ld2r,ld3r];
 
 %% Total rebar volume in beam
-[volRebar,lenRebarL,lenRebarM,lenRebarR]=volRebarDesignBeamSpan1DiamLayer(nb3l,...
+[volRebar,lenRebarL,lenRebarM,lenRebarR]=volRebarDesignBeamSpan3DSec(nb3l,...
  nb3m,nbarsRight,abl3,abm3,abr3,ldL3,ld3M,ld3R,nbAfterCut3L,...
  nbAfterCut3M,cutLoc,span);
 

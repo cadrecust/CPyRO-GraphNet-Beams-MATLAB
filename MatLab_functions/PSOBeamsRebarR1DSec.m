@@ -60,7 +60,7 @@ bp=b-2*brec-2*dvs-dbc;
 dbmin=rebarAvailable(1,2);
 
 [sepMindbmin,sepMax1m]=sepMinMaxHK13(dbmin,hagg,0);
-nbmaxi=fix((b-2*brec-2*10-2*sepMindbmin+sepMindbmin)/(dbmin+sepMindbmin));
+nbmaxi=fix((b-2*brec-2*10+sepMindbmin)/(dbmin+sepMindbmin));
 
 for i=1:3
     if nb3l(i)-nbAfterCut3(i)==0 && nbAfterCut3(i)>2 % if there were cuts
@@ -141,11 +141,24 @@ for j=1:nMaxIter
                 sepRebarRight(ii)=sepRebarleft(ii);
             end
         end
-        
-        [Abr,EffR,MrR,cRight,xBest,ListDiam,RebarDistr,isfeasibleRight]=...
-        DistrEffConstrR1DSec(Mur,fc,Es,h,b,hagg,brec,hrec,pmin,pmax,sepMin,...
-        sepRebarRight,nbAfterCut3,distrRebarComp,listRebarDiamComp,nb3l,dbc,nbr);
-        
+		
+		[isNbRFeasible]=continuityConstrNbSec(nbAfterCut3,nbr);
+        if isNbRFeasible
+            [Abr,EffR,MrR,cRight,xBest,ListDiam,RebarDistr,isfeasibleRight]=...
+            PlainDistrEffConstrR1DSec(Mur,fc,Es,h,b,hagg,brec,hrec,pmin,pmax,sepMin,...
+            sepRebarRight,nbAfterCut3,distrRebarComp,listRebarDiamComp,nb3l,dbc,nbr);
+        else
+
+            Abr=1e10;
+            EffR=0;
+            MrR=0;
+            cRight=0;
+            xBest=zeros(1,3);
+            ListDiam=0;
+            RebarDistr=[];
+            isfeasibleRight=false;
+        end
+		
         if (Abr<bestPerformance && isfeasibleRight)
             
             bestdbc=dbc;

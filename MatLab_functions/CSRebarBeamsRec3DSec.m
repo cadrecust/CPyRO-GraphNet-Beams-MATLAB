@@ -44,7 +44,7 @@ function [FCS1,FCS2,NB,UNB,UND,UC,CS]=CSRebarBeamsRec3DSec(nbmaxLay,nb3l,...
     NB2 = 1-min(sum(nb3m)/(3*nbmaxLay),1);
     NB3 = 1-min(sum(nb3r)/(3*nbmaxLay),1);
     
-    NB = 1/3*(NB1 + NB2 + NB3) ;
+    NB = (1/3*(NB1 + NB2 + NB3)).^Wnb(1) ;
     
     %% Uniformity of Number of Rebars along the beam's span
     % Right section
@@ -80,7 +80,7 @@ function [FCS1,FCS2,NB,UNB,UND,UC,CS]=CSRebarBeamsRec3DSec(nbmaxLay,nb3l,...
         end
     end
 
-    UNB=sum(UNBS)/3;
+    UNB=(sum(UNBS)/3)^Wunb(2);
 
     %% Number of diameters sizes
     
@@ -88,7 +88,7 @@ function [FCS1,FCS2,NB,UNB,UND,UC,CS]=CSRebarBeamsRec3DSec(nbmaxLay,nb3l,...
     NDS = difDiamSizesLayers([db3sec(1,:),db3sec(2,:)],...
                              [nb3sec(1,:),nb3sec(2,:)]);
 
-    UND=1/NDS;
+    UND=(1/NDS)^Wnd(1);
 
     %% Cutting and bending
     % Number of cuts and number of layers
@@ -120,7 +120,7 @@ function [FCS1,FCS2,NB,UNB,UND,UC,CS]=CSRebarBeamsRec3DSec(nbmaxLay,nb3l,...
     CSDCut=1/3*sum(UC);
     
     %% Constructability of assembly and placing
-    FCS1 = ((UNB^Wunb(2) + UND^Wnd(1) + NB.^Wnb(1))/3 ) ;
+    FCS1 = ((UNB + UND + NB)/3 ) ;
     
     %% Constructability of cutting and bending
     FCS2 = ( NC + CSDCut )/2 ;

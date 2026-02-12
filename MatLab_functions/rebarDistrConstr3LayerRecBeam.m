@@ -1,4 +1,4 @@
-function [cc]=rebarDistrConstr3LayerRecBeam3DSec(bp,nb3l)
+function [cc]=rebarDistrConstr3LayerRecBeam(bp,nb3l)
 
 nbl1=nb3l(1);
 nbl2=nb3l(2);

@@ -1,4 +1,4 @@
-% Optimal_Design_SSFSRecBeams_Data_Generator_TestData_Ex01
+% Optimal_Design_SSFSRecBeams_TestData_Ex01
 %----------------------------------------------------------------
 % PURPOSE 
 %    To test the performance of the PSO assisted by CPyRO-GraphNet-Beams
@@ -16,16 +16,24 @@ clc
 clear all
 
 %% Import data
-A=importdata('Enhanced_Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
+% Dataset is imported to test on samples.
+% Give the path of the folder where the data is stored. 
+% Adjust it to your own path.
+A=importdata('Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
 
 DR2=A.data;
 nObservations=size(DR2,1);
 
-subsize=3000;
+subsize=3000; % adjust if not all data is required for testing
 idxSubData=ceil(rand(subsize,1)*nObservations);
 DR=DR2(idxSubData,:);
 nObservations=length(DR(:,1));
 
+% The data is an array of 27 columns. The first 7 columns represent the 
+% input features of the nework. b, h, fcu, L, Mur, Mum, Mul. The next two 
+% columns are the magnitudes of the distributed loads in N/mm. Then, the 
+% rest of columns are the targets (optimum rebar design features, number 
+% of rebars and the diameter sizes).
 i=0;
 dL=100;
 for j =1:nObservations
@@ -34,7 +42,7 @@ for j =1:nObservations
               sum(DR2(j,16:18).*DR2(j,25:27).^2*pi/4)];
 
     A13=As9(j,:)';
-    if sum([A13']) > 0
+    if sum([A13']) > 0 % Consider only samples with feasible solutions
         i = i + 1;
         DR(i,:)=DR2(j,:);
         fcu(1,i)=DR2(j,3);
@@ -68,7 +76,7 @@ for j =1:nObservations
 end
 nObservations=size(x0L,2);
 
-model2Use="GCNN";
+model2Use="PlainGNN";
 
 %% Materials and parameters for reinforcing steel
 %% Concrete cover
@@ -77,7 +85,7 @@ brec=50; % lateral concrete cover
 
 %% Materials
 fy=500; % Yield stress of steel reinforcement (N/mm2)
-wac=7.85e-6; % unit volume weight of the reinforcing steel (N/mm3)
+wac=7.85e-6; % unit volume weight of the reinforcing steel (Kg/mm3)
 %% Rebar data
 % Available commercial rebar diameters (in eight-of-an-inch)
                 %type diam
@@ -92,11 +100,11 @@ rebarAvailable=[1 6;
                 9 40
                 10 50]; % mm^2
 
-dvs=10;
+dvs=10; % default diameter size of stirrups (mm)
 pmin=0.003;
 pmax=0.025;
 
-%% Constructability
+%% Constructability factors
 hagg=20;
 WUB=[0.6,0.7];
 WND=[0.6];
@@ -142,17 +150,15 @@ for nd=1:ndl  % loop on vector of data size
     meanX=[349.605734767025	633.225806451613	37.4534050179212	4505.55555555556	-26339479.7363044];
     sigsqX=[4949.66534345653	11216.8343161059	31.3195134954590	996295.300677007	2.10064997682719e+15];
 
-    [XTrain,XValidation,XTest,ATrain,AValidation,ATest]=dataTrainNLClass...
+    [XTrain,XValidation,XTest,ATrain,AValidation,ATest]=dataTestTrainSurrogate...
     (DR,idxTrain,idxValidation,idxTest,meanX,sigsqX);
     
     YTest = AsDataTest;
     XTestOpt = DR(idxTest,1:7);
 
     %% Load surrogate models
-    % Model for prediction of Number of Layers
-
     % Model for prediction of As per cross-section
-    if model2Use=="PIGCNN"
+    if model2Use=="CPyRO"
         nheadsparamnGATPIGNN=load("nHeads_GAT_PIGNN_As_Section_1000.mat");
         paramPIGCNN=load("PIGCNN_As_Section_1000.mat");
         Ao3=PIGNNmodel1fc1GAT1Conv1fc(paramPIGCNN.pignn,XTest,ATest,nheadsparamnGATPIGNN.numHeads);
@@ -383,7 +389,7 @@ MSE=mse(YAo,Ypv)
 
 %% Function appendix
 
-function [XTrain,XValidation,XTest,ATrain,AValidation,ATest]=dataTrainNLClass...
+function [XTrain,XValidation,XTest,ATrain,AValidation,ATest]=dataTestTrainSurrogate...
     (DR,idxTrain,idxValidation,idxTest,meanX,sigsqX)
 
     sigsqX1=sigsqX(1);

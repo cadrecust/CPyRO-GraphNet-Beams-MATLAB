@@ -2,7 +2,7 @@ function [extrOptPFCS,PF_CFA,PF_VOL,newPop,feasibleSol,genCFA,genVOL,IGDt,IGDv]=
     SANSGAIIMSBeamsRebarSimple(b,h,span,brec,hrec,hagg,pmin,pmax,rebarAvailable,...
     fcu,load_conditions,fy,wac,cutLoc,dbcc,nbcc,dblow,nblow,W_PF_REF,...
     CFA_PF_REF,Wfac,Ao3,ucfactors,MIGDconv,pop_size,gen_max)
-
+NMLOCT=size(Ao3,2);
 nspans=length(b);
 yp_max=max(W_PF_REF);
 np_baseline=length(CFA_PF_REF(:,1));
@@ -126,7 +126,9 @@ for i =1:pop_size
 
     sepMin=[sepMin1l,sepMin2l,sepMin3l,...
             sepMin1m,sepMin2m,sepMin3m];
-
+    
+    rm=ceil(rand*NMLOCT);
+    Aos3=Ao3(:,rm);
     dbc=[db1l,db2l,db3l,db1m,db2m,db3m];
     if all([dbc(1)>=dbc(2),dbc(2)>=dbc(3),...
              dbc(4)>=dbc(5),dbc(5)>=dbc(6)])
@@ -137,7 +139,7 @@ for i =1:pop_size
         DistrRebarRight{i},nbLMRspan(:,:,i),totalnbSpan(:,:,i),CSrebarSpans(i,:),...
         CSAssemCutSpan(:,:,i),nbcut3sec(:,:,i),nblowLeft(:,:,i),nbTopMid(:,:,i),nblowRight(:,:,i),bestCFA(i),...
         cc(i,1)]=SAMOOptimMSFSBeamsRebarSimple(b,h,span,brec,hrec,hagg,pmin,pmax,...
-        sepMin,fcu,load_conditions,fy,cutLoc,Ao3,Wfac,dbc);
+        sepMin,fcu,load_conditions,fy,cutLoc,Aos3,Wfac,dbc);
     
     else
         rebarVol(i)=1e10;
@@ -241,7 +243,9 @@ for gen_count=1:gen_max
 
         sepMin=[sepMin1l,sepMin2l,sepMin3l,...
                 sepMin1m,sepMin2m,sepMin3m];
-
+        
+        rm=ceil(rand*NMLOCT);
+        Aos3=Ao3(:,rm);
         dbc=[db1l,db2l,db3l,db1m,db2m,db3m];
         if all([dbc(1)>=dbc(2),dbc(2)>=dbc(3),...
              dbc(4)>=dbc(5),dbc(5)>=dbc(6)])
@@ -252,7 +256,7 @@ for gen_count=1:gen_max
             DistrRebarRight{ii},nbLMRspan(:,:,ii),totalnbSpan(:,:,ii),CSrebarSpans(ii,:),...
             CSAssemCutSpan(:,:,ii),nbcut3sec(:,:,ii),nblowLeft(:,:,ii),nbTopMid(:,:,ii),nblowRight(:,:,ii),bestCFA(ii),...
             cc(ii,1)]=SAMOOptimMSFSBeamsRebarSimple(b,h,span,brec,hrec,hagg,pmin,pmax,...
-            sepMin,fcu,load_conditions,fy,cutLoc,Ao3,Wfac,dbc);
+            sepMin,fcu,load_conditions,fy,cutLoc,Aos3,Wfac,dbc);
 
         else
             rebarVol(ii)=1e10;

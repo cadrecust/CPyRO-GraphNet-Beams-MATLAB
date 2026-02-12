@@ -13,7 +13,7 @@ doTrain=false
 %% Load Data
 % Give the path of the folder where the data is stored. 
 % Adjust it to your own path. 
-A=importdata('/Users/lfvm94/Library/CloudStorage/OneDrive-HKUSTConnect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
+A=importdata('Enhanced_Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
 
 DR=A.data;
 numObservations=size(DR,1);
@@ -73,7 +73,6 @@ for j =1:numObservations
         x0L(:,i)=[10,xMmid,L(1,i)-10]';
     end
 end
-
 
 % Update n total samples, in case only a portion of the original size
 % is required
@@ -1032,28 +1031,28 @@ features1=[X(:,1),X(:,2),X(:,3),X(:,4),X(:,5)];
 features2=[X(:,1),X(:,2),X(:,3),X(:,4),X(:,6)];
 features3=[X(:,1),X(:,2),X(:,3),X(:,4),X(:,7)];
 
-coulombData1=zeros(numObservations,3,3);
-coulombData2=zeros(numObservations,3,3);
-coulombData3=zeros(numObservations,3,3);
-coulombData4=zeros(numObservations,3,3);
-coulombData5=zeros(numObservations,3,3);
+XData1=zeros(numObservations,3,3);
+XData2=zeros(numObservations,3,3);
+XData3=zeros(numObservations,3,3);
+XData4=zeros(numObservations,3,3);
+XData5=zeros(numObservations,3,3);
 for i=1:numObservations
     features=[features1(i,:)',features2(i,:)',features3(i,:)'];
 
     for j=1:numNodesGNN
-        coulombData1(i,j,j)=features(1,j);
-        coulombData2(i,j,j)=features(2,j);
-        coulombData3(i,j,j)=features(3,j);
-        coulombData4(i,j,j)=features(4,j);
-        coulombData5(i,j,j)=features(5,j);
+        XData1(i,j,j)=features(1,j);
+        XData2(i,j,j)=features(2,j);
+        XData3(i,j,j)=features(3,j);
+        XData4(i,j,j)=features(4,j);
+        XData5(i,j,j)=features(5,j);
     end
 end
 
-coulombData1 = double(permute(coulombData1, [2 3 1]));
-coulombData2 = double(permute(coulombData2, [2 3 1]));
-coulombData3 = double(permute(coulombData3, [2 3 1]));
-coulombData4 = double(permute(coulombData4, [2 3 1]));
-coulombData5 = double(permute(coulombData5, [2 3 1]));
+XData1 = double(permute(XData1, [2 3 1]));
+XData2 = double(permute(XData2, [2 3 1]));
+XData3 = double(permute(XData3, [2 3 1]));
+XData4 = double(permute(XData4, [2 3 1]));
+XData5 = double(permute(XData5, [2 3 1]));
 
 %% Partition of data
 
@@ -1063,41 +1062,41 @@ adjacencyDataValidation = adjacency(:,:,idxValidation);
 adjacencyDataTest = adjacency(:,:,idxTest);
 
 % feature data
-coulombDataTrain1 = coulombData1(:,:,idxTrain);
-coulombDataValidation1 = coulombData1(:,:,idxValidation);
-coulombDataTest1 = coulombData1(:,:,idxTest);
+XDataTrain1 = XData1(:,:,idxTrain);
+XDataValidation1 = XData1(:,:,idxValidation);
+XDataTest1 = XData1(:,:,idxTest);
 
-coulombDataTrain2 = coulombData2(:,:,idxTrain);
-coulombDataValidation2 = coulombData2(:,:,idxValidation);
-coulombDataTest2 = coulombData2(:,:,idxTest);
+XDataTrain2 = XData2(:,:,idxTrain);
+XDataValidation2 = XData2(:,:,idxValidation);
+XDataTest2 = XData2(:,:,idxTest);
 
-coulombDataTrain3 = coulombData3(:,:,idxTrain);
-coulombDataValidation3 = coulombData3(:,:,idxValidation);
-coulombDataTest3 = coulombData3(:,:,idxTest);
+XDataTrain3 = XData3(:,:,idxTrain);
+XDataValidation3 = XData3(:,:,idxValidation);
+XDataTest3 = XData3(:,:,idxTest);
 
-coulombDataTrain4 = coulombData4(:,:,idxTrain);
-coulombDataValidation4 = coulombData4(:,:,idxValidation);
-coulombDataTest4 = coulombData4(:,:,idxTest);
+XDataTrain4 = XData4(:,:,idxTrain);
+XDataValidation4 = XData4(:,:,idxValidation);
+XDataTest4 = XData4(:,:,idxTest);
 
-coulombDataTrain5 = coulombData5(:,:,idxTrain);
-coulombDataValidation5 = coulombData5(:,:,idxValidation);
-coulombDataTest5 = coulombData5(:,:,idxTest);
+XDataTrain5 = XData5(:,:,idxTrain);
+XDataValidation5 = XData5(:,:,idxValidation);
+XDataTest5 = XData5(:,:,idxTest);
 
 
 % Train partition
 
-[ATrain,XTrain1,labelsTrain] = preprocessData(adjacencyDataTrain,coulombDataTrain1,AsTrain);
-[~,XTrain2,~] = preprocessData(adjacencyDataTrain,coulombDataTrain2,AsTrain);
-[~,XTrain3,~] = preprocessData(adjacencyDataTrain,coulombDataTrain3,AsTrain);
-[~,XTrain4,~] = preprocessData(adjacencyDataTrain,coulombDataTrain4,AsTrain);
-[~,XTrain5,~] = preprocessData(adjacencyDataTrain,coulombDataTrain5,AsTrain);
+[ATrain,XTrain1,labelsTrain] = preprocessData(adjacencyDataTrain,XDataTrain1,AsTrain);
+[~,XTrain2,~] = preprocessData(adjacencyDataTrain,XDataTrain2,AsTrain);
+[~,XTrain3,~] = preprocessData(adjacencyDataTrain,XDataTrain3,AsTrain);
+[~,XTrain4,~] = preprocessData(adjacencyDataTrain,XDataTrain4,AsTrain);
+[~,XTrain5,~] = preprocessData(adjacencyDataTrain,XDataTrain5,AsTrain);
 
 % Validation partition
-[AValidation,XValidation1,labelsValidation] = preprocessData(adjacencyDataValidation,coulombDataValidation1,AsValidation);
-[~,XValidation2,~] = preprocessData(adjacencyDataValidation,coulombDataValidation2,AsValidation);
-[~,XValidation3,~] = preprocessData(adjacencyDataValidation,coulombDataValidation3,AsValidation);
-[~,XValidation4,~] = preprocessData(adjacencyDataValidation,coulombDataValidation4,AsValidation);
-[~,XValidation5,~] = preprocessData(adjacencyDataValidation,coulombDataValidation5,AsValidation);
+[AValidation,XValidation1,labelsValidation] = preprocessData(adjacencyDataValidation,XDataValidation1,AsValidation);
+[~,XValidation2,~] = preprocessData(adjacencyDataValidation,XDataValidation2,AsValidation);
+[~,XValidation3,~] = preprocessData(adjacencyDataValidation,XDataValidation3,AsValidation);
+[~,XValidation4,~] = preprocessData(adjacencyDataValidation,XDataValidation4,AsValidation);
+[~,XValidation5,~] = preprocessData(adjacencyDataValidation,XDataValidation5,AsValidation);
 
 %% Normalizing training data
 muX1 = mean(XTrain1);
@@ -1135,23 +1134,23 @@ XValidation5 = (XValidation5 - muX5)./sqrt(sigsqX5);
 XValidation=[XValidation1,XValidation2,XValidation3,XValidation4,XValidation5];
 
 %% Normalizing test data
-[ATest,XTest1,labelsTest] = preprocessData(adjacencyDataTest,coulombDataTest1,AsDataTest);
+[ATest,XTest1,labelsTest] = preprocessData(adjacencyDataTest,XDataTest1,AsDataTest);
 XTest1 = (XTest1 - muX1)./sqrt(sigsqX1);
 XTest1 = dlarray(XTest1);
 
-[~,XTest2,~] = preprocessData(adjacencyDataTest,coulombDataTest2,AsDataTest);
+[~,XTest2,~] = preprocessData(adjacencyDataTest,XDataTest2,AsDataTest);
 XTest2 = (XTest2 - muX2)./sqrt(sigsqX2);
 XTest2 = dlarray(XTest2);
 
-[~,XTest3,~] = preprocessData(adjacencyDataTest,coulombDataTest3,AsDataTest);
+[~,XTest3,~] = preprocessData(adjacencyDataTest,XDataTest3,AsDataTest);
 XTest3 = (XTest3 - muX3)./sqrt(sigsqX3);
 XTest3 = dlarray(XTest3);
 
-[~,XTest4,~] = preprocessData(adjacencyDataTest,coulombDataTest4,AsDataTest);
+[~,XTest4,~] = preprocessData(adjacencyDataTest,XDataTest4,AsDataTest);
 XTest4 = (XTest4 - muX4)./sqrt(sigsqX4);
 XTest4 = dlarray(XTest4);
 
-[~,XTest5,~] = preprocessData(adjacencyDataTest,coulombDataTest5,AsDataTest);
+[~,XTest5,~] = preprocessData(adjacencyDataTest,XDataTest5,AsDataTest);
 XTest5 = (XTest5 - muX5)./sqrt(sigsqX5);
 XTest5 = dlarray(XTest5);
 

@@ -16,18 +16,18 @@ clc
 clear all
 
 %% Geometry 
-span=4000; % mm
-b=450; % width (mm)
-h=650; % height (mm)
+span=5000; % mm
+b=300; % width (mm)
+h=600; % height (mm)
         
 hrec=50; % 
 brec=50; % lateral concrete cover
 
 %% Materials
-fcu=25; % Kg/mm2
+fcu=35; % N/mm2
 
 fy=500; % Yield stress of steel reinforcement (N/mm2)
-wac=78.5e-6; % unit volume weight of the reinforcing steel (N/mm3)
+wac=7.85e-6; % unit volume weight of the reinforcing steel (Kg/mm3)
 
 %% Numerical model for analysis
 dL=100; % mm
@@ -43,7 +43,7 @@ Ic=b*h^3/12;
 
 %% Loads
 
-W=[20.8,52.2]; % Uniformly Distributed Load over the whole beam  N / mm
+W=[25,30]; % Uniformly Distributed Load over the whole beam  N / mm
 nspans=length(W(:,1));
 
 [R,U,V,M]=MSFSFEMBeams(span,Ac,Ic,Ec,supportsLoc,W,dL,wrange,0);
@@ -51,7 +51,6 @@ nspans=length(W(:,1));
 ne=zeros(1,nspans);
 neSum=0;
 load_conditions=[];
-cutLoc=[];
 for i=1:nspans
     
     spanLengths(i)=supportsLoc(i+1)-supportsLoc(i);
@@ -67,9 +66,7 @@ for i=1:nspans
                     i Mleft Mmid Mright]; %Kg-cm (flexure)
     
     %% Cut location ( local coordinates)
-    cutxLoc=cutLocationSSRecBeam(M(:,i1:neSum),dL);
-    cutLoc=[cutLoc;
-            cutxLoc];
+    cutxLocBeam(i,:)=cutLocationSSRecBeam(M(:,i1:neSum),dL);
 end
 load_conditions
 
@@ -93,21 +90,26 @@ pmax=0.025;
 %% OPTIMAL DESIGN 
 
 hagg=20;
-Wunb=[1.3,1.4,1];
-Wnd=[1.2,0.8];
-Wcut=[1.3,1.6,2];
-Wfac=[Wunb,Wnd,Wcut];
+
+WUB=[0.6,0.7];
+WND=[0.6];
+WNB=[0.4];
+WNC=[0.6,0.7];
+Wcs1=2;
+Wcs2=0.5;
+WfaConstr=[WUB,WND,WNB,WNC,Wcs1,Wcs2];
 
 nfig=1;
-[volRebarSpans,LenRebarL,LenRebarM,LenRebarR,sepRebarSpans,db18Spans,EffSpans,...
+[volRebarSpans,LenRebarL,LenRebarM,LenRebarR,sepRebarSpans,db9Spans,EffSpans,...
 MrSpans,cSpans,ListRebarDiamLeft,ListRebarDiamMid,ListRebarDiamRight,...
 DistrRebarLeft,DistrRebarMid,DistrRebarRight,tenbLMRspan,totnbSpan,...
-CFAspans]=OptimMSFSBeamsRebar2(b,h,spanLengths,brec,hrec,hagg,...
-pmin,pmax,rebarAvailable,fcu,load_conditions,fy,wac,cutLoc,Wfac,1,1,[nfig]);
+CFAspans]=OptimMSFSBeamsRebar3DSec(b,h,spanLengths,brec,hrec,hagg,...
+pmin,pmax,rebarAvailable,fcu,load_conditions,fy,wac,cutxLocBeam,WfaConstr,1,1,...
+[nfig],60,40);
 
 for i=1:nspans
     % Average percentage of cross-section reinforcement 
-    rho=sum(tenbLMRspan(i,:).*(db18Spans(i,:).^2*pi/4))./(b*h)/3;  
+    rho=sum(tenbLMRspan(i,:).*(db9Spans(i,:).^2*pi/4))./(b*h)/3;  
     
     [s1(i,1),s2(i,1),s3(i,1),d1(i,1),d2(i,1)]=shearDesignBeams(span,b,h,...
                                                     hrec,fcu,fy,V,dvs,rho);
@@ -118,7 +120,7 @@ end
 %% Side rebars (if necessary)
 if h>=750
     [dSb,nSb,sepSb,distrSideBars]=sideBarsRecBeams3SecSpan(b,h,fy,...
-            brec,hrec,tenbLMRspan,db18Spans,dvs,hagg,rebarAvailable);
+            brec,hrec,tenbLMRspan,db9Spans,dvs,hagg,rebarAvailable);
     
     beamNSb(1,1)=2*nSb;
     diamlistdSb=zeros(2*nSb,1)+dSb;
@@ -131,11 +133,10 @@ else
     diamlistdSb=[];
     beamNSb=[];
 end
-%{
-directionData='C:\Users\lfver\OneDrive - HKUST Connect\PhD\Rebar_Design_Material\';
 
-ExportDesignSSRecBeam(directionData,[b,h,span,brec,hrec],[0,0,0],LenRebarL,...
+directionData='C:\Users\lfver\OneDrive\Desktop\OneDrive\CALDRECUST\Software\Package\Visual_CALDRECUST\Design_Data\RebarBeams\';
+
+ExportDesignSSRecBeam(directionData,[b,h,span,brec,hrec],db9Spans,LenRebarL,...
     LenRebarM,LenRebarR,-DistrRebarLeft,DistrRebarMid,-DistrRebarRight,totnbSpan,...
     tenbLMRspan,ListRebarDiamLeft,ListRebarDiamMid,ListRebarDiamRight,...
     diamlistdSb,distrSideBars,beamNSb,[s1,s2,s3,d1,d2,dvsBeams]);
-%}

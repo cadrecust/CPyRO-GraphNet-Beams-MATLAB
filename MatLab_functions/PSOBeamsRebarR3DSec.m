@@ -48,8 +48,8 @@ function [bestPerformance,bestEffR,bestMrR,bestcRight,bestnb,bestsepRebar,...
 %
 %------------------------------------------------------------------------
 % LAST MODIFIED: L.F.Veduzco    2023-07-03
-% Copyright (c)  Faculty of Engineering
-%                Autonomous University of Queretaro, Mexico
+% Copyright (c)  School of Engineering
+%                HKUST
 %------------------------------------------------------------------------
 
 Es=200e3;
@@ -83,7 +83,7 @@ indexDiamLayBegin=3-ndoptim+1;
 dbmin=rebarAvailable(1,2);
 
 [sepMindbmin,sepMax1m]=sepMinMaxHK13(dbmin,hagg,0);
-nbmaxi=fix((b-2*brec-2*10-2*sepMindbmin+sepMindbmin)/(dbmin+sepMindbmin));
+nbmaxi=fix((b-2*brec-2*10+sepMindbmin)/(dbmin+sepMindbmin));
 
 for i=1:3
     if nb3l(i)-nbAfterCut3(i)==0 && nbAfterCut3(i)>2 % if there were cuts
@@ -107,7 +107,7 @@ beta=0.99;
 maxVelocity=(xmax-xmin)/dt;
 
 %% Generate position and velocity vector of each particle
-numberOfParticles=100;
+numberOfParticles=50;
 numberOfDimensionSpace=ndoptim+3;    
 
 PositionMatrix=zeros(numberOfParticles,numberOfDimensionSpace);
@@ -120,7 +120,7 @@ for i=1:numberOfParticles
     end
 end
 
-nMaxIter=30;
+nMaxIter=40;
 iteration=0;
 bestPerformance=1e10;
 bestEffR=0;
@@ -169,10 +169,21 @@ for j=1:nMaxIter
             end
         end
         
-        [Abr,EffR,MrR,cRight,xBest,ListDiam,RebarDistr,isfeasibleRight]=...
-        PlainDistrEffConstrR3DSec(Mur,fc,Es,h,b,hagg,brec,hrec,pmin,pmax,sepMin,...
-        sepRebarRight,nbAfterCut3,distrRebarComp,listRebarDiamComp,nb3l,dbc,nbr);
-        
+		[isNbRFeasible]=continuityConstrNbSec(nbAfterCut3,nbr);
+		if isNbRFeasible
+			[Abr,EffR,MrR,cRight,xBest,ListDiam,RebarDistr,isfeasibleRight]=...
+			PlainDistrEffConstrR3DSec(Mur,fc,Es,h,b,hagg,brec,hrec,pmin,pmax,sepMin,...
+			sepRebarRight,nbAfterCut3,distrRebarComp,listRebarDiamComp,nb3l,dbc,nbr);
+		else
+			Abr=1e10;
+			EffR=0;
+			MrR=0;
+			cRight=0;
+			xBest=zeros(1,3);
+			ListDiam=0;
+			RebarDistr=[];
+			isfeasibleRight=false;
+		end
         if (Abr<bestPerformance && isfeasibleRight)
             
             bestdbc=dbc;

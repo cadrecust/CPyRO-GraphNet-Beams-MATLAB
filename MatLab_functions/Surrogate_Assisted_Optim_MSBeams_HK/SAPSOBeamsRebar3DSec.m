@@ -117,8 +117,6 @@ for i=1:3
     end
 end
 
-%% Number of rebars
-
 xmax=[xmaxL,xmaxM];
 xmin=[xminL,xminM];
 
@@ -187,7 +185,7 @@ for j=1:nMaxIter
         
         if all([dbc(1)>=dbc(2),dbc(2)>=dbc(3),...
                 dbc(4)>=dbc(5),dbc(5)>=dbc(6)])
-
+			
             rr1=b-2*brec-2*dvs+sepMin(1);
             rr2=b-2*brec-2*dvs+sepMin(2);
             rr3=b-2*brec-2*dvs+sepMin(3);

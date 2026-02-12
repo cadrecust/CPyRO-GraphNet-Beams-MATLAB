@@ -6,13 +6,13 @@ function [minimumFitness,bestLenRebar,bestsepRebar,bestNbCombo9,bestEffLeft,best
     bestnblowRight,bestdblowRight,bestCFA,constr]=CutRedistrOptimRecBeam1DSec...
     (load_conditions,fcu,Es,h,b,span,dbc,hagg,brec,hrec,pmin,pmax,sepMin,...
     cutLoc,Wfac,nblm,rebarAvailable)
-            
+
 Wunb=Wfac(1:2);
 Wnd=Wfac(3);
-Wcut=Wfac(4);
-Wnb=Wfac(5);
-Wcs1=Wfac(6);
-Wcs2=Wfac(7);
+Wnb=Wfac(4);
+Wcut=Wfac(5:6);
+Wcs1=Wfac(7);
+Wcs2=Wfac(8);
 
 fy=Es*0.00217;
 
@@ -177,20 +177,21 @@ ld1R=anchorLenBarTen(fcu,fy,h,hrec,db1l);
 lenRebar=[lenRebarL;lenRebarM;lenRebarR];
 
 %% Constructability
-[FCS1,FCS2,NB,UNB,UND,UC,CS]=CSRebarBeamsRec1DSec(nb3l,nb3m,nb3r,...
-    dbl,dbm,dbr,nbcut3l,nbcut3m,nbcut3r,Wunb,Wnd,Wcut,Wnb,Wcs1,Wcs2)
-[UNBS,UNDS,UCS,BSS,CFAS,BS,CS]=CFABeamsRec1DSec(nb3l,nb3m,nb3r,db1l,...
-db1m,db1l,nbcut3sec(1,:),nbcut3sec(2,:),nbcut3sec(3,:),Wunb,Wnd,Wcut);
+dbmin=10;
+[sepMindbmin,~]=sepMinMaxHK13(dbmin,20,0);
+nbmaxLay=(b-2*brec-2*dvs+sepMindbmin)/(sepMindbmin+dbmin);
+[FCS1,FCS2,NB,UNB,UND,UC,CS]=CSRebarBeamsRec1DSec(nbmaxLay,nb3l,nb3m,nb3r,db1l,...
+db1m,db1l,nbcut3sec(1,:),nbcut3sec(2,:),nbcut3sec(3,:),Wunb,Wnd,Wcut,Wnb,Wcs1,Wcs2);
 
 %% Rebar distribution restriction
 % Left section
-[ccl]=rebarDistrConstr3LayerRecBeam1DiamLayer(bpl,nb3l);
+[ccl]=rebarDistrConstr3LayerRecBeam(bpl,nb3l);
 
 % Mid section
-[ccm]=rebarDistrConstr3LayerRecBeam1DiamLayer(bpm,nb3m);
+[ccm]=rebarDistrConstr3LayerRecBeam(bpm,nb3m);
 
 % Right section
-[ccr]=rebarDistrConstr3LayerRecBeam1DiamLayer(bpm,nbarsRight);
+[ccr]=rebarDistrConstr3LayerRecBeam(bpm,nb3r);
 
 %% Evaluate restrictions
 

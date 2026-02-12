@@ -13,8 +13,7 @@ function [bestPerformance,bestLenRebar,bestsepRebar,bestPosition,bestdbc9,...
 %    b_rec,h_rec,vSep,fc,Mu,fy,graphConvergencePlot)
 %
 %-------------------------------------------------------------------------
-% SYSTEM OF UNITS: SI - (Kg,cm)
-%                  US - (lb,in)
+% SYSTEM OF UNITS: N,mm
 %------------------------------------------------------------------------
 % PURPOSE: To determine an optimal reinforcement area for a given beam 
 % cross-section with specified initially dimensions (b,h) through the SGD 
@@ -120,7 +119,7 @@ end
 dbmin=rebarAvailable(1,2);
 
 [sepMindbmin,sepMax1m]=sepMinMaxHK13(dbmin,hagg,0);
-nbmax=fix((b-2*Ccx-2*dvs-2*sepMindbmin+sepMindbmin)/(dbmin+sepMindbmin));
+nbmax=fix((b-2*Ccx-2*dvs+sepMindbmin)/(dbmin+sepMindbmin));
 
 if nbcc(1)==0
     nbminl=2;
@@ -162,8 +161,6 @@ end
 
 cbestLeft=[];
 
-iteration=0;
-
 bestPerformance=1e10; % Assumes non-negative fitness values!
 bestPosition=zeros(1,numberOfDimensionSpace);
 
@@ -171,12 +168,11 @@ performance=zeros(numberOfParticles,1);
 bestPositionSwarmMatrix=PositionMatrix;
 bestPerformanceSwarm=inf(numberOfParticles,1);
 for j=1:nMaxIter
-    iteration=iteration+1;
 
     % Determine the best position and best performance
 
     for i=1:numberOfParticles
-        position=PositionMatrix(i,:); % diameter combo
+        position=PositionMatrix(i,:); % diameter combo + number of rebars
         
         db1l=rebarAvailable(position(1),2);
         db2l=rebarAvailable(position(2),2);
@@ -202,26 +198,58 @@ for j=1:nMaxIter
         nb2l=position(8);
         nb3l=position(9);
         
+		[isNbLFeasible]=continuityConstrNbSec(nbcc,[nb1l,nb2l,nb3l]);
+		
         nb1m=position(10);
         nb2m=position(11);
         nb3m=position(12);
         
+		[isNbMFeasible]=continuityConstrNbSec(nblow,[nb1m,nb2m,nb3m]);
+		
         nblm=[nb1l,nb2l,nb3l,nb1m,nb2m,nb3m];
         
-        [performance(i),LenRebar{i},sepRebar(:,:,i),NbCombo9(i,:),EffLeft(i),EffMid(i),...
-        EffRight(i),MrLeft(i),MrMid(i),MrRight(i),cLeft(i),cMid(i),cRight(i),ListRebarDiamLeft{i},...
-        ListRebarDiamMid{i},ListRebarDiamRight{i},DistrRebarLeft{i},RebarDistrMid{i},...
-        DistrRebarRight{i},dbcRight(i,:),nbcut3sec(:,:,i),nblowLeft{i},dblowLeft{i},nbTopMid{i},...
-        dbTopMid{i},nblowRight{i},dblowRight{i},CFA(i),const(i)]=CutRedistrOptimRecBeam3DSec(load_conditions,fcu,...
-        Es,h,b,span,dbc,hagg,Ccx,Ccy,pmin,pmax,sepMin,rebarAvailable,cutLoc,...
-        Wfac,nblm);
-
+        if all([dbc(1)>=dbc(2),dbc(2)>=dbc(3),...
+                dbc(4)>=dbc(5),dbc(5)>=dbc(6),...
+                isNbLFeasible,isNbLFeasible])
+			
+			[performance(i),LenRebar{i},sepRebar(:,:,i),NbCombo9(i,:),EffLeft(i),EffMid(i),...
+			EffRight(i),MrLeft(i),MrMid(i),MrRight(i),cLeft(i),cMid(i),cRight(i),ListRebarDiamLeft{i},...
+			ListRebarDiamMid{i},ListRebarDiamRight{i},DistrRebarLeft{i},RebarDistrMid{i},...
+			DistrRebarRight{i},dbcRight(i,:),nbcut3sec(:,:,i),nblowLeft{i},dblowLeft{i},nbTopMid{i},...
+			dbTopMid{i},nblowRight{i},dblowRight{i},CFA(i),const(i)]=CutRedistrOptimRecBeam3DSec(load_conditions,fcu,...
+			Es,h,b,span,dbc,hagg,Ccx,Ccy,pmin,pmax,sepMin,rebarAvailable,cutLoc,...
+			Wfac,nblm);
+		else 
+			performance(i)=1e10;
+			LenRebar{i}=0;
+			CFA(i)=0;
+			sepRebar(:,:,i)=zeros(3,3);
+			EffLeft(i)=0;
+			EffMid(i)=0;
+			EffRight(i)=0;
+			MrLeft(i)=0;
+			MrMid(i)=0;
+			MrRight(i)=0;
+			cLeft(i)=0;
+			cMid(i)=0;
+			cRight(i)=0;
+			ListRebarDiamLeft{i}=[];
+			ListRebarDiamMid{i}=[];
+			ListRebarDiamRight{i}=[];
+			DistrRebarLeft{i}=[];
+			RebarDistrMid{i}=[];
+			DistrRebarRight{i}=[];
+			NbCombo9(i,:)=zeros(1,9);
+			nbcut3sec(:,:,i)=zeros(3,3);
+			dbcRight(i,:)=zeros(1,3);
+			nblowRight{i}=zeros(1,3);
+			dblowRight{i}=zeros(1,3);
+			const(i)=10;
+        end
         dbc9(i,:)=[dbc,dbcRight(i,:)];
-    end
-    
-    for i=1:numberOfParticles
-        if (performance(i)<bestPerformance && const(i)==1)
-            
+    %end
+    %for i=1:numberOfParticles
+		if (performance(i)<bestPerformance && const(i)==0)
             bestPerformance=performance(i); % rebar volume (mm^3)
             bestCFA=CFA(i);
             bestLenRebar=LenRebar{i};
@@ -321,6 +349,7 @@ if graphConvPlot==1 && isempty(cbestLeft)==0
             'PSO'})
     hold on
 end
+
 if isempty(cbestLeft)==1
     bestPerformance=1e10; % rebar volume (mm^3)
     bestLenRebar=0;
