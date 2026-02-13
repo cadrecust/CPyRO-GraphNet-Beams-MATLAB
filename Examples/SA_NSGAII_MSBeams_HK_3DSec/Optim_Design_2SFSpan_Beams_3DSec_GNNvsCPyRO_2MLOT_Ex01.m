@@ -123,36 +123,8 @@ XTestOpt = DR(:,1:7);
 %% Load surrogate models
 
 % Model for prediction of As per cross-section
-% MLOCT 1
-nheadsparamnGATPIGNN=load("nHeads_GAT_PIGNN_As_Section_MOConstrucT1_4000.mat");
-paramPIGCNN=load("PIGCNN_As_Section_MOConstrucT1_4000.mat");
-
-Ao3CPyRO1=PIGNNmodel1fc1GAT1Conv1fc(paramPIGCNN.pignn,XTest,ATest,nheadsparamnGATPIGNN.numHeads);
-Ao3CPyRO1=extractdata(Ao3CPyRO1);
-
-nheadsparamnGATGNN=load("nHeads_GAT_GCNN_As_Section_MLOCT1_4000.mat");
-paramGCNN=load("GCNN_As_Section_MLOCT1_4000.mat");
-
-Ao3GNN1=PlainGNNmodel1fc1GAT1Conv1fc(paramGCNN.parameters,XTest,ATest,nheadsparamnGATGNN.numHeads);
-Ao3GNN1=extractdata(Ao3GNN1);
-
-% MLOCT 2
-nheadsparamnGATPIGNN=load("nHeads_GAT_PIGNN_As_Section_MOConstrucT5_4000.mat");
-paramPIGCNN=load("PIGCNN_As_Section_MOConstrucT5_4000.mat");
-
-Ao3CPyRO2=PIGNNmodel1fc1GAT1Conv1fc(paramPIGCNN.pignn,XTest,ATest,nheadsparamnGATPIGNN.numHeads);
-Ao3CPyRO2=extractdata(Ao3CPyRO2);
-
-nheadsparamnGATGNN=load("nHeads_GAT_GCNN_As_Section_MLOCT5_4000.mat");
-paramGCNN=load("GCNN_As_Section_MLOCT5_4000.mat");
-
-Ao3GNN2=PlainGNNmodel1fc1GAT1Conv1fc(paramGCNN.parameters,XTest,ATest,nheadsparamnGATGNN.numHeads);
-Ao3GNN2=extractdata(Ao3GNN2);
-
-% Gather all estimations for each model
-
-Ao3CPyRO=[Ao3CPyRO1,Ao3CPyRO2];
-Ao3GNN=[Ao3GNN1,Ao3GNN2];
+[Ao3CPyRO]=MLOCT(2,XTest,ATest,'CPyRO');
+[Ao3GNN]=MLOCT(2,XTest,ATest,'PlainGNN');
 
 fcu=XTestOpt(:,3);
 span=XTestOpt(:,4);
@@ -219,18 +191,16 @@ IGDt1,IGDv1]=SANSGAIIMSBeamsRebarSimple(b,h,span,brec,hrec,hagg,pmin,pmax,rebarA
 fcu,load_conditions,fy,wac,cutxLocBeamTest,dbcc,nbcc,dblow,nblow,PF_REF_WEIGHT,...
 PF_CS_REF,Wfac,Ao3CPyRO,ucfactors,MIGDconv,pop_size,gen_max);
 
-model2Use='CPyRO Graph-Net';
 plotEvolutionPF(PF_CS_REF,PF_REF_WEIGHT,genCFA1,genVOL1,IGDt1,...
-                IGDv1,feasibleSol1,wac,ngen1,ngen2,ngen3,gen_max,model2Use,1,11);
+                IGDv1,feasibleSol1,wac,ngen1,ngen2,ngen3,gen_max,'CPyRO',1,11);
 
 [extrOptPFCS2,PF_CFA2,PF_VOL2,newPop2,feasibleSol2,genCFA2,genVOL2,...
 IGDt2,IGDv2]=SANSGAIIMSBeamsRebarSimple(b,h,span,brec,hrec,hagg,pmin,pmax,rebarAvailable([2:10]',:),...
 fcu,load_conditions,fy,wac,cutxLocBeamTest,dbcc,nbcc,dblow,nblow,PF_REF_WEIGHT,...
 PF_CS_REF,Wfac,Ao3GNN,ucfactors,MIGDconv,pop_size,gen_max);
 
-model2Use='Plain GCNN';
 plotEvolutionPF(PF_CS_REF,PF_REF_WEIGHT,genCFA2,genVOL2,IGDt2,...
-                IGDv2,feasibleSol2,wac,ngen1,ngen2,ngen3,gen_max,model2Use,1,12);
+                IGDv2,feasibleSol2,wac,ngen1,ngen2,ngen3,gen_max,'PlainGNN',1,12);
 
 %% Analysis of PF Dominance
 [CI,PFdom]=dominancePFs(PF_CFA1,PF_VOL1,PF_CFA2,PF_VOL2);

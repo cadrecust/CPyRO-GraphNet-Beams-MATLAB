@@ -15,12 +15,12 @@ if nb1new<nbl1
 							  % middle outwards are removed
 	finishRemove=startRemove-1+nbcut1;
 	indecesKeep=[];
-	for i=1:nbl2
+	for i=1:nbl1
 		if i<startRemove || i>finishRemove
 			indecesKeep=[indecesKeep;i];
 		end
 	end
-
+	
 	LenRebar1=zeros(nbl1,1)+ldL3(1);
 	LenRebar1(indecesKeep,1)=span;
 else

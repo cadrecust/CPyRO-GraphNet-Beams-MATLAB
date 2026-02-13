@@ -38,6 +38,7 @@ for i=1:nspans
     
     nbcut3secSpan=[nbcut3secSpan;
                     bestnbcut3sec];
+	
     db9Spans(i,:)=bestdbc;
     volRebarSpans(i,1)=bestPerformance;
     sepRebarSpans=[sepRebarSpans;
@@ -55,7 +56,7 @@ for i=1:nspans
     nbMid=length(bestListRebarDiamMid);
     ListRebarDiamMid=[ListRebarDiamMid;
                       bestListRebarDiamMid];
-					  
+	
     nbright=length(bestListRebarDiamRight);
     ListRebarDiamRight=[ListRebarDiamRight;
                         bestListRebarDiamRight];
@@ -75,7 +76,7 @@ for i=1:nspans
                 bestLenRebar(sum(bestnbtLMR(1:3))+1:sum(bestnbtLMR(1:6)))];
     LenRebarR=[LenRebarR;
                 bestLenRebar(sum(bestnbtLMR(1:6))+1:sum(bestnbtLMR))];
-
+	
     nbLMRspan=[nbLMRspan;
                bestnbtLMR];
 

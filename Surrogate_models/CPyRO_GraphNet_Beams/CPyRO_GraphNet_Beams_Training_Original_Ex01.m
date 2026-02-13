@@ -13,7 +13,7 @@ doTrain=false
 %% Load Data
 % Give the path of the folder where the data is stored. 
 % Adjust it to your own path. 
-A=importdata('Enhanced_Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
+A=importdata('Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
 
 DR=A.data;
 numObservations=size(DR,1);
@@ -271,8 +271,8 @@ pignn.Decoder.Weights = initializeGlorot(sz,numOut,numIn,"double");
 pignn.Decoder.b = initializeZeros([1,numOut]);
 
 %% Specify Training Options. Training parameters
-nheadsparamnNLclass=load("C:/Users/luizv/OneDrive/CALDRECUST/Software/Package/CALDRECUST-MatLab/MatLab_functions/AI_CALDRECUST_MatLab/Surrogates_RecBeams/Constructability_Awareness_GNN/nHead_nLay_GNN_4000.mat");
-paramNLclass=load("C:/Users/luizv/OneDrive/CALDRECUST/Software/Package/CALDRECUST-MatLab/MatLab_functions/AI_CALDRECUST_MatLab/Surrogates_RecBeams/Constructability_Awareness_GNN/nLay_GNN_4000.mat");
+nheadsparamnNLclass=load("Constructability_Awareness_GNN/nHead_nLay_GNN_4000.mat");
+paramNLclass=load("Constructability_Awareness_GNN/nLay_GNN_4000.mat");
 
 paramNL=paramNLclass.parameters;
 nheadsParamNL=nheadsparamnNLclass.numHeads;

@@ -14,7 +14,7 @@ doTraining = false;
 %% Load Data
 % Give the path of the folder where the data is stored. 
 % Adjust it to your own path.
-A=importdata('C:/Users/luizv/OneDrive/CALDRECUST/Software/Package/CALDRECUST-MatLab/MatLab_functions/AI_CALDRECUST_MatLab/Datasets/Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
+A=importdata('Datasets/Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
 
 DR1=A.data;
 

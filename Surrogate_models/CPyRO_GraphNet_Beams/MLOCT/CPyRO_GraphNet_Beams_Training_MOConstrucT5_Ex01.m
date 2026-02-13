@@ -12,7 +12,7 @@ doTraining = false;
 %% Preparing data
 % Load data: Give the path of the folder where the data is stored. 
 % Adjust it to your own path. 
-A=importdata('/Users/lfvm94/Library/CloudStorage/OneDrive-HKUSTConnect/PhD/PhD_Research/MOO_ConstrucBased_Beams_HK/Enhanced_Data_MOO/Enhanced_Data_5LOT_HK_Nb_Db_Simple_4000.xlsx');
+A=importdata('Data_5LOT_HK_Nb_Db_Simple_4000.xlsx');
 
 DR=A.data;
 numObservations=size(DR,1);
