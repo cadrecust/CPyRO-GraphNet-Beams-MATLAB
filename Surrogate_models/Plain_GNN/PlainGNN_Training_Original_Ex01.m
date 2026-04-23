@@ -26,7 +26,6 @@ idxSubData=ceil(rand(subsize,1)*n);
 DR=DR1(idxSubData,:);
 
 n=length(DR(:,1));
-X = [DR(:,1:7)];
 
 %% Training 
 

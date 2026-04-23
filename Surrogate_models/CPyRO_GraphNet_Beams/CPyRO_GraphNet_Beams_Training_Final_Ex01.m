@@ -1,53 +1,45 @@
 
 clc
 clear all
+
 %% Constructability-aware Physics-Informed GNN for Rebar Optimization 
-% Design in Concrete Beams (CPyRO-GraphNet-Beams) - MLOCT 3
+% Design in Concrete Beams (CPyRO-GraphNet-Beams)
 
 % Note: Training this network is a computationally intensive task. To make 
 % the example run quicker, this example skips the training step and loads 
-% a pretrained network. To instead train the network, set the doTraining 
-% variable to true.
-doTraining = false;
-%% Preparing data
-% Load data: Give the path of the folder where the data is stored. 
+% a pretrained network. To instead train the network, set the doTraining variable to true.
+doTrain=true
+
+%% Load Data
+% Give the path of the folder where the data is stored. 
 % Adjust it to your own path. 
-A=importdata('Data_5LOT_HK_Nb_Db_Simple_4000.xlsx');
+A=importdata('Data_1LOT_HK_Nb_Db_Simple_4000.xlsx');
 
 DR=A.data;
 numObservations=size(DR,1);
 
+% Adjust the follwing variable "subsize" if not all data is required.
 subsize=4000;
 idxSubData=ceil(rand(subsize,1)*numObservations);
 DR=DR(idxSubData,:);
 numObservations=length(DR(:,1));
 
-% The data is an array of 109 columns. The first 7 columns represent the 
+% The data is an array of 27 columns. The first 7 columns represent the 
 % input features of the nework. b, h, fcu, L, Mur, Mum, Mul. The next two 
 % columns are the magnitudes of the distributed loads in N/mm. Then, the 
 % rest of columns are the targets (optimum rebar design features, number 
-% of rebars and the diameter sizes). Five targets are included for each 
-% feature, then, the five constructability values of each optimum design 
-% and the rebar weight (in Kg) are included.
-% [b, h, fcu, L, Mu1, Mu2, Mu3, W1, W2, nb1, nb2, nb3, nb4, nb5, db1, db2,...
-%  db3, db4, db5, cs1, cs2, cs3, cs4, cs5, ws1, ws2, ws3, ws4, ws5].
-
-% Each optimum features (nb1, nb2, ...nb5 and db1, db2, ..., db5) has three 
-% components (for each rebar layer). 
-% This network is trained only for the first level of optimum 
-% constructability target LOCT5 (or max rebar weight from the Pareto 
-% Front from which the data was generated).
+% of rebars and the diameter sizes).
 %% Data points to enforce BC
-% 
+
 dL = 100;
 i = 0;
 for j =1:numObservations
-    As9(j,:)=[sum(DR(j,46:48).*DR(j,91:93).^2*pi/4),...
-              sum(DR(j,49:51).*DR(j,94:96).^2*pi/4),...
-              sum(DR(j,52:54).*DR(j,97:99).^2*pi/4)];
-    
+    As9(j,:)=[sum(DR(j,10:12).*DR(j,19:21).^2*pi/4),...
+              sum(DR(j,13:15).*DR(j,22:24).^2*pi/4),...
+              sum(DR(j,16:18).*DR(j,25:27).^2*pi/4)];
+
     A13=As9(j,:)';
-    if sum([A13']) > 0
+    if sum([A13']) > 0 % Consider only samples with feasible solutions
         i = i + 1;
 
         XNL(i,:)=DR(i,1:7);
@@ -73,6 +65,9 @@ for j =1:numObservations
         [Mmid,mp]=max(M(1,:));
         xMmid = (mp-1) * dL ;
 
+        Vul(1,i)=V(1,1);
+        Vur(1,i) = V(2, end);
+        
         %% Data points to enforce BC (rebar cross-section area quantities)
 
         u1L(:,i)=A13;
@@ -82,12 +77,10 @@ for j =1:numObservations
     end
 end
 
-
 % Update n total samples, in case only a portion of the original size
 % is required
 
 numObservations = size(EI,2);
-
 % Get the indeces of training, validation and testing data with function 
 % trainingPartitions attahced in the Function appendix.
 [idxTrain,idxValidation,idxTest] = trainingPartitions(numObservations,[0.7 0.15 0.15]);
@@ -132,10 +125,15 @@ datafcuTest = fcu(1,idxTest);
 Mulmr=[Mul(1,:);
        Mum(1,:);
        Mur(1,:)];
-        
+   
+Vulr = [Vul(1,:);
+         Vur(1,:)];
+
 MulmrTrain=Mulmr(:,idxTrain);
 MulmrValidation=Mulmr(:,idxValidation);
 MulmrTest=Mulmr(:,idxTest);
+
+VulrTrain = Vulr(:,idxTrain);
 
 u0BC1 = u1L';
 
@@ -159,9 +157,10 @@ databTrain = dlarray(databTrain , "BC");
 datahTrain = dlarray(datahTrain , "BC");
 datafcuTrain = dlarray(datafcuTrain , "BC");
 MulmrTrain = dlarray(MulmrTrain , "BC");
+VulrTrain = dlarray(VulrTrain , "BC");
 
 pdeCoeffsTrain=dlarray([dataWTrain,dataLTrain,dataEITrain,databTrain,...
-                        datahTrain,datafcuTrain,MulmrTrain],"BC");
+                        datahTrain,datafcuTrain,MulmrTrain,VulrTrain],"BC");
 
 % Validation data
 
@@ -192,7 +191,7 @@ end
 adjacency=repmat(adjacency,[1,1,numObservations]);
 
 %% Prepare the data related to the coordinates of the BC points
-% Features: X coordinates of BC points
+% X coordinates of BC points
 XBC=zeros(numObservations,numNodesGNN,numNodesGNN);
 for i=1:numObservations
     for j=1:numNodesGNN
@@ -201,7 +200,8 @@ for i=1:numObservations
 end
 XBC = double(permute(XBC, [2 3 1]));
 
-%% Further proceed to partition the data with the random indeces previously 
+%% Partition of data
+% Further proceed to partition the data with the random indeces previously 
 % generated.
 
 % node adjacency data
@@ -233,7 +233,6 @@ XValidation=[XValidation1];
 [XTrainPIGNN,XValidationPIGNN,XTestPIGNN,meanXNL,sigsqXNL]=dataTrainNLClass(XNL,idxTrain,...
                         idxValidation,idxTest,adjacency,numNodesGNN,AsDataTrain,...
                         AsDataValidation,AsDataTest);
-
 
 %% Define model for PIGNN
 
@@ -281,10 +280,8 @@ pignn.Decoder.Weights = initializeGlorot(sz,numOut,numIn,"double");
 pignn.Decoder.b = initializeZeros([1,numOut]);
 
 %% Specify Training Options. Training parameters
-% Load the pre-trained GNN model for constructability-awareness
-% Adjust according to where the models are located:
-nheadsparamnNLclass=load("nHead_nLay_GNN_MOConstrucT3_4000.mat");
-paramNLclass=load("nLay_GNN_MOConstrucT3_4000.mat");
+nheadsparamnNLclass=load("Constructability_Awareness_GNN/nHead_nLay_GNN_4000.mat");
+paramNLclass=load("Constructability_Awareness_GNN/nLay_GNN_4000.mat");
 
 paramNL=paramNLclass.parameters;
 nheadsParamNL=nheadsparamnNLclass.numHeads;
@@ -302,17 +299,20 @@ TTrain = labelsTrain;
 TValidation = labelsValidation;
 
 %% Train model
-if doTraining
+% Train the model using a custom training loop.
+if doTrain
     averageGrad = [];
     averageSqGrad = [];
     
+    %numIterations = numEpochs;
     monitor = trainingProgressMonitor(Metrics=["TrainingLoss","ValidationLoss"], ...
                                       Info="Epoch", ...
                                       XLabel="Iteration");
     
     groupSubPlot(monitor,"Loss",["TrainingLoss","ValidationLoss"])
-    %% Train PINN
-    
+
+    % Call the function containing the architecture of the pretrained
+    % GNN model for constructability awareness- pass the loaded parameters
     NLTrain = modelNL(paramNL,XTrainPIGNN,ATrain,nheadsParamNL);
     epoch = 0;
     learningRate = initialLearnRate;
@@ -321,7 +321,7 @@ if doTraining
         epoch = epoch + 1;
         
         % Evaluate the model loss and gradients using dlfeval.
-        [loss(epoch),gradients] = dlfeval(@modelLoss1GAT1Conv1fc,pignn,...
+        [loss(epoch),gradients] = dlfeval(@modelLossPIGNN1GAT1Conv1fc,pignn,...
             XTrain,ATrain,TTrain,XTrainPIGNN,pdeCoeffsTrain,numHeads,NLTrain);
     
         % Update the network parameters using the adamupdate function.
@@ -342,20 +342,22 @@ if doTraining
             % Record the validation loss.
             recordMetrics(monitor,epoch,ValidationLoss=lossValidation(itervalid));
         end
-    
+        
         % Update learning rate.
         learningRate = initialLearnRate / (1+learnRateDecay*epoch);
     
         monitor.Progress = 100 * epoch/numEpochs;
     end      
-    save('PIGCNN_As_Section_MOConstrucT5_4000',"pignn")
-    save('nHeads_GAT_PIGNN_As_Section_MOConstrucT5_4000','numHeads')
+    
+    save('PIGCNN_As_Section_4000',"pignn")
+    save('nHeads_GAT_PIGNN_As_Section_4000','numHeads')
 else
-    nheadsparamnGATPIGNN=load("nHeads_GAT_PIGNN_As_Section_MOConstrucT5_4000.mat");
-    paramPIGCNN=load("PIGCNN_As_Section_MOConstrucT5_4000.mat");
+    nheadsparamnGATPIGNN=load("nHeads_GAT_PIGNN_As_Section_4000.mat");
+    paramPIGCNN=load("PIGCNN_As_Section_4000.mat");
 end
-%% Test model - Predict using unseen data
-% Test partition
+
+%% Test
+% Get test labels
 [ATest,~,labelsTest] = preprocessData(adjacencyDataTest,XBCTest1,AsDataTest);
 
 TTest = labelsTest;
@@ -364,8 +366,8 @@ if doTraining
 else
     YTest = model1GAT1Conv1fc(paramPIGCNN.pignn,XTestPIGNN,ATest,nheadsparamnGATPIGNN.numHeads);
 end
-
 mre=[];
+
 YAo1=dlarray([]);
 Ypvt1=dlarray([]);
 YAo2=dlarray([]);
@@ -394,8 +396,6 @@ for i=1:nTest
 
     mre=[mre; MREC'];
     
-    %% TEST
-    
     % Gather test predictions and test labels
     YAo1=[YAo1; dlarray([BCU1Test(1,i)],"BC")];
     Ypvt1=[Ypvt1; dlarray([YTest(i1,1)],"BC")];
@@ -408,10 +408,8 @@ for i=1:nTest
 
 end
 
-%& R coefficients
-% Compute Regression coefficients for the three main cross-section of each 
-% test beam model
-%
+
+% R coefficients
 YAo1=extractdata(YAo1);
 Ypvt1=extractdata(Ypvt1);
 [BT1]=MLR2([[YAo1],[Ypvt1]],0);
@@ -448,7 +446,6 @@ disp(BT2(1))
 disp('R coefficient')
 disp(BT3(1))
 
-%% Regression plots
 % Define pastel colors
 pastel_gray = [0.663,0.663,0.663]; % #D3D3D3 for scatter points
 pastel_green = [0.537,0.812,0.941]; % #B5EAD7 for fit line
@@ -465,7 +462,7 @@ hold on
 legend(strcat('Data ','R = ',num2str(BT1(1))),'Y=T','Fit')
 xlabel('$Y$',interpreter='latex')
 ylabel('$\hat{Y}$',interpreter='latex')
-title({strcat('True vs PIGNN ', ' solution:'),'MLOCT-3','Optimum rebar area of a Beam',...
+title({strcat('True Solution vs PIGNN ', ' solution:'),'Optimum rebar area of a Beam',...
     'Left section'},interpreter='latex') 
 hold on
 grid on
@@ -484,7 +481,7 @@ hold on
 legend(strcat('Data ','R = ',num2str(BT2(1))),'Y=T','Fit')
 xlabel('$Y$',interpreter='latex')
 ylabel('$\hat{Y}$',interpreter='latex')
-title({strcat('True vs PIGNN ', ' solution:'),'MLOCT-3','Optimum rebar area of a Beam',...
+title({strcat('True Solution vs PIGNN ', ' solution:'),'Optimum rebar area of a Beam',...
     'Mid section'},interpreter='latex') 
 hold on
 grid on
@@ -502,7 +499,7 @@ hold on
 legend(strcat('Data ','R = ',num2str(BT3(1))),'Y=T','Fit')
 xlabel('$Y$',interpreter='latex')
 ylabel('$\hat{Y}$',interpreter='latex')
-title({strcat('True vs PIGNN ', ' solution:'),'MLOCT-3','Optimum rebar area of a Beam',...
+title({strcat('True Solution vs PIGNN ', ' solution:'),'Optimum rebar area of a Beam',...
     'Right section'},interpreter='latex') 
 hold on
 grid on
@@ -516,11 +513,11 @@ disp(lossTest)
 
 %% MRE
 MRE=sum(mre)/(3*nTest)
+
 %% Function appendix
 
 function Y = model1GAT1Conv1fc(parameters,X,A,numHeads)
 
-    
     ANorm = normalizeAdjacency(A);
     
     Z1 = X * parameters.Embed.Weights + parameters.Embed.b;
@@ -541,7 +538,7 @@ function Y = model1GAT1Conv1fc(parameters,X,A,numHeads)
     
 end
 
-function [loss,gradients] = modelLoss1GAT1Conv1fc(pinn,...
+function [loss,gradients] = modelLossPIGNN1GAT1Conv1fc(pinn,...
     XTrain,A,TTrain,XTrainNL,pdeCoeffs,numHeads,NL)
 
     U = model1GAT1Conv1fc(pinn,XTrainNL,A,numHeads);
@@ -565,9 +562,15 @@ function [loss,gradients] = modelLoss1GAT1Conv1fc(pinn,...
         b=pdeCoeffs(5,nm);
         h=pdeCoeffs(6,nm);
         fcu=pdeCoeffs(7,nm);
+        MLeft=pdeCoeffs(8,nm);
+        VLeft=pdeCoeffs(1,nm);
         
         Wx=W1+(W2-W1)/L.*Xnm;
-        
+        Mx = MLeft + ...
+             VLeft .* Xnm + ...
+             (W1 .* Xnm.^2) / 2 + ...
+             ((W2 - W1) .* Xnm.^3) / (6 * L);
+
         % Compute neural axis for each collocation point (cross-section)
         bp = b-2*Cc-2*dvs;
         
@@ -646,6 +649,7 @@ function [loss,gradients] = modelLoss1GAT1Conv1fc(pinn,...
         f31 = (0.45 .* b .* fcu) ./ (Es .* ecu) ;
         root1 = sqrt(ast1.^2 + 4 .* f31 .* sum(f11));
         s1  =  (-ast1 + root1 ) ./ (2 .* f31);
+        K1 = ecu/s1*Mx(1)/abs(Mx(1)) ;
         
         % Mid cross-section
         tlist2=[tw12,tw22,tw32];
@@ -663,6 +667,7 @@ function [loss,gradients] = modelLoss1GAT1Conv1fc(pinn,...
 
         root2 = sqrt(ast2.^2 + 4 .* f32 .* sum(f12)) ;
         s2  =  (-ast2 + root2 ) ./ (2 .* f32);
+        K2 = ecu/s2*Mx(2)/abs(Mx(2)) ;
         
         % Right cross-section
         tlist3=[tw13,tw23,tw33];
@@ -678,9 +683,10 @@ function [loss,gradients] = modelLoss1GAT1Conv1fc(pinn,...
         f33 = (0.45 .* b .* fcu) ./ (Es .* ecu) ;
         root3 = sqrt(ast3.^2 + 4 .* f33 .* sum(f13)) ;
         s3  =  (-ast3 + root3 ) ./ (2 .* f33);
+        K3 = ecu/s3*Mx(3)/abs(Mx(3)) ;
         
         % Compute curvature function.
-        K=ecu./[s1,s2,s3];
+        K=[K1,K2,K3];
         
         % First derivative
         Kx = dlgradient(sum(K,"all"),Xnm,EnableHigherDerivatives=true);
@@ -1043,28 +1049,28 @@ features1=[X(:,1),X(:,2),X(:,3),X(:,4),X(:,5)];
 features2=[X(:,1),X(:,2),X(:,3),X(:,4),X(:,6)];
 features3=[X(:,1),X(:,2),X(:,3),X(:,4),X(:,7)];
 
-coulombData1=zeros(numObservations,3,3);
-coulombData2=zeros(numObservations,3,3);
-coulombData3=zeros(numObservations,3,3);
-coulombData4=zeros(numObservations,3,3);
-coulombData5=zeros(numObservations,3,3);
+XData1=zeros(numObservations,3,3);
+XData2=zeros(numObservations,3,3);
+XData3=zeros(numObservations,3,3);
+XData4=zeros(numObservations,3,3);
+XData5=zeros(numObservations,3,3);
 for i=1:numObservations
     features=[features1(i,:)',features2(i,:)',features3(i,:)'];
 
     for j=1:numNodesGNN
-        coulombData1(i,j,j)=features(1,j);
-        coulombData2(i,j,j)=features(2,j);
-        coulombData3(i,j,j)=features(3,j);
-        coulombData4(i,j,j)=features(4,j);
-        coulombData5(i,j,j)=features(5,j);
+        XData1(i,j,j)=features(1,j);
+        XData2(i,j,j)=features(2,j);
+        XData3(i,j,j)=features(3,j);
+        XData4(i,j,j)=features(4,j);
+        XData5(i,j,j)=features(5,j);
     end
 end
 
-coulombData1 = double(permute(coulombData1, [2 3 1]));
-coulombData2 = double(permute(coulombData2, [2 3 1]));
-coulombData3 = double(permute(coulombData3, [2 3 1]));
-coulombData4 = double(permute(coulombData4, [2 3 1]));
-coulombData5 = double(permute(coulombData5, [2 3 1]));
+XData1 = double(permute(XData1, [2 3 1]));
+XData2 = double(permute(XData2, [2 3 1]));
+XData3 = double(permute(XData3, [2 3 1]));
+XData4 = double(permute(XData4, [2 3 1]));
+XData5 = double(permute(XData5, [2 3 1]));
 
 %% Partition of data
 
@@ -1074,41 +1080,41 @@ adjacencyDataValidation = adjacency(:,:,idxValidation);
 adjacencyDataTest = adjacency(:,:,idxTest);
 
 % feature data
-coulombDataTrain1 = coulombData1(:,:,idxTrain);
-coulombDataValidation1 = coulombData1(:,:,idxValidation);
-coulombDataTest1 = coulombData1(:,:,idxTest);
+XDataTrain1 = XData1(:,:,idxTrain);
+XDataValidation1 = XData1(:,:,idxValidation);
+XDataTest1 = XData1(:,:,idxTest);
 
-coulombDataTrain2 = coulombData2(:,:,idxTrain);
-coulombDataValidation2 = coulombData2(:,:,idxValidation);
-coulombDataTest2 = coulombData2(:,:,idxTest);
+XDataTrain2 = XData2(:,:,idxTrain);
+XDataValidation2 = XData2(:,:,idxValidation);
+XDataTest2 = XData2(:,:,idxTest);
 
-coulombDataTrain3 = coulombData3(:,:,idxTrain);
-coulombDataValidation3 = coulombData3(:,:,idxValidation);
-coulombDataTest3 = coulombData3(:,:,idxTest);
+XDataTrain3 = XData3(:,:,idxTrain);
+XDataValidation3 = XData3(:,:,idxValidation);
+XDataTest3 = XData3(:,:,idxTest);
 
-coulombDataTrain4 = coulombData4(:,:,idxTrain);
-coulombDataValidation4 = coulombData4(:,:,idxValidation);
-coulombDataTest4 = coulombData4(:,:,idxTest);
+XDataTrain4 = XData4(:,:,idxTrain);
+XDataValidation4 = XData4(:,:,idxValidation);
+XDataTest4 = XData4(:,:,idxTest);
 
-coulombDataTrain5 = coulombData5(:,:,idxTrain);
-coulombDataValidation5 = coulombData5(:,:,idxValidation);
-coulombDataTest5 = coulombData5(:,:,idxTest);
+XDataTrain5 = XData5(:,:,idxTrain);
+XDataValidation5 = XData5(:,:,idxValidation);
+XDataTest5 = XData5(:,:,idxTest);
 
 
 % Train partition
 
-[ATrain,XTrain1,labelsTrain] = preprocessData(adjacencyDataTrain,coulombDataTrain1,AsTrain);
-[~,XTrain2,~] = preprocessData(adjacencyDataTrain,coulombDataTrain2,AsTrain);
-[~,XTrain3,~] = preprocessData(adjacencyDataTrain,coulombDataTrain3,AsTrain);
-[~,XTrain4,~] = preprocessData(adjacencyDataTrain,coulombDataTrain4,AsTrain);
-[~,XTrain5,~] = preprocessData(adjacencyDataTrain,coulombDataTrain5,AsTrain);
+[ATrain,XTrain1,labelsTrain] = preprocessData(adjacencyDataTrain,XDataTrain1,AsTrain);
+[~,XTrain2,~] = preprocessData(adjacencyDataTrain,XDataTrain2,AsTrain);
+[~,XTrain3,~] = preprocessData(adjacencyDataTrain,XDataTrain3,AsTrain);
+[~,XTrain4,~] = preprocessData(adjacencyDataTrain,XDataTrain4,AsTrain);
+[~,XTrain5,~] = preprocessData(adjacencyDataTrain,XDataTrain5,AsTrain);
 
 % Validation partition
-[AValidation,XValidation1,labelsValidation] = preprocessData(adjacencyDataValidation,coulombDataValidation1,AsValidation);
-[~,XValidation2,~] = preprocessData(adjacencyDataValidation,coulombDataValidation2,AsValidation);
-[~,XValidation3,~] = preprocessData(adjacencyDataValidation,coulombDataValidation3,AsValidation);
-[~,XValidation4,~] = preprocessData(adjacencyDataValidation,coulombDataValidation4,AsValidation);
-[~,XValidation5,~] = preprocessData(adjacencyDataValidation,coulombDataValidation5,AsValidation);
+[AValidation,XValidation1,labelsValidation] = preprocessData(adjacencyDataValidation,XDataValidation1,AsValidation);
+[~,XValidation2,~] = preprocessData(adjacencyDataValidation,XDataValidation2,AsValidation);
+[~,XValidation3,~] = preprocessData(adjacencyDataValidation,XDataValidation3,AsValidation);
+[~,XValidation4,~] = preprocessData(adjacencyDataValidation,XDataValidation4,AsValidation);
+[~,XValidation5,~] = preprocessData(adjacencyDataValidation,XDataValidation5,AsValidation);
 
 %% Normalizing training data
 muX1 = mean(XTrain1);
@@ -1146,23 +1152,23 @@ XValidation5 = (XValidation5 - muX5)./sqrt(sigsqX5);
 XValidation=[XValidation1,XValidation2,XValidation3,XValidation4,XValidation5];
 
 %% Normalizing test data
-[ATest,XTest1,labelsTest] = preprocessData(adjacencyDataTest,coulombDataTest1,AsDataTest);
+[ATest,XTest1,labelsTest] = preprocessData(adjacencyDataTest,XDataTest1,AsDataTest);
 XTest1 = (XTest1 - muX1)./sqrt(sigsqX1);
 XTest1 = dlarray(XTest1);
 
-[~,XTest2,~] = preprocessData(adjacencyDataTest,coulombDataTest2,AsDataTest);
+[~,XTest2,~] = preprocessData(adjacencyDataTest,XDataTest2,AsDataTest);
 XTest2 = (XTest2 - muX2)./sqrt(sigsqX2);
 XTest2 = dlarray(XTest2);
 
-[~,XTest3,~] = preprocessData(adjacencyDataTest,coulombDataTest3,AsDataTest);
+[~,XTest3,~] = preprocessData(adjacencyDataTest,XDataTest3,AsDataTest);
 XTest3 = (XTest3 - muX3)./sqrt(sigsqX3);
 XTest3 = dlarray(XTest3);
 
-[~,XTest4,~] = preprocessData(adjacencyDataTest,coulombDataTest4,AsDataTest);
+[~,XTest4,~] = preprocessData(adjacencyDataTest,XDataTest4,AsDataTest);
 XTest4 = (XTest4 - muX4)./sqrt(sigsqX4);
 XTest4 = dlarray(XTest4);
 
-[~,XTest5,~] = preprocessData(adjacencyDataTest,coulombDataTest5,AsDataTest);
+[~,XTest5,~] = preprocessData(adjacencyDataTest,XDataTest5,AsDataTest);
 XTest5 = (XTest5 - muX5)./sqrt(sigsqX5);
 XTest5 = dlarray(XTest5);
 
@@ -1170,15 +1176,15 @@ XTest=[XTest1,XTest2,XTest3,XTest4,XTest5];
 end
 
 function [B]=MLR2(D,inter)
-
-n=length(D(:,1));
-p=length(D(1,:));
-if inter==1
-    X=[ones(n,1),D(:,1:p-1)];
-elseif inter==0
-    X=[D(:,1:p-1)];
-end
-Y=D(:,p);
-
-B=inv(X'*X)*X'*Y;
+    
+    n=length(D(:,1));
+    p=length(D(1,:));
+    if inter==1
+        X=[ones(n,1),D(:,1:p-1)];
+    elseif inter==0
+        X=[D(:,1:p-1)];
+    end
+    Y=D(:,p);
+    
+    B=inv(X'*X)*X'*Y;
 end
